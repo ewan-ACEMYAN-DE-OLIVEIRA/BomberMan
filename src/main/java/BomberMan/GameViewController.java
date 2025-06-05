@@ -146,15 +146,24 @@ public class GameViewController {
                 Integer col = GridPane.getColumnIndex(node);
                 Integer row = GridPane.getRowIndex(node);
                 if (col == null || row == null) continue;
-                GameModel.CellType type = gameModel.getCellType(row, col);
+                
                 node.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion");
-                switch (type) {
-                    case WALL -> node.getStyleClass().add("cell-wall");
-                    case DESTRUCTIBLE_WALL -> node.getStyleClass().add("cell-destructible");
-                    case PLAYER -> node.getStyleClass().add("cell-player");
-                    case BOMB -> node.getStyleClass().add("cell-bomb");
-                    case EXPLOSION -> node.getStyleClass().add("cell-explosion");
-                    default -> node.getStyleClass().add("cell-empty");
+                
+                boolean hasPlayer = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col);
+                boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB);
+                
+                if (hasPlayer && hasBomb) {
+                    node.getStyleClass().addAll("cell-bomb", "cell-player"); // joueur sur bombe
+                } else if (hasPlayer) {
+                    node.getStyleClass().add("cell-player");
+                } else {
+                    switch (gameModel.getCellType(row, col)) {
+                        case WALL -> node.getStyleClass().add("cell-wall");
+                        case DESTRUCTIBLE_WALL -> node.getStyleClass().add("cell-destructible");
+                        case BOMB -> node.getStyleClass().add("cell-bomb");
+                        case EXPLOSION -> node.getStyleClass().add("cell-explosion");
+                        default -> node.getStyleClass().add("cell-empty");
+                    }
                 }
             }
         }

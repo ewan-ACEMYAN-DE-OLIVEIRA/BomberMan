@@ -122,9 +122,22 @@ public class GameModel {
     public boolean movePlayer(int dRow, int dCol) {
         int newRow = playerRow + dRow;
         int newCol = playerCol + dCol;
-        if (canMoveTo(newRow, newCol)) {
-            grid[playerRow][playerCol] = CellType.EMPTY;
-            grid[newRow][newCol] = CellType.PLAYER;
+        if (!isValidPosition(newRow, newCol)) return false;
+        CellType destType = grid[newRow][newCol];
+        // Le joueur peut marcher sur une case vide ou une case bombe
+        if (destType == CellType.EMPTY || destType == CellType.BOMB) {
+            // Si l’ancienne case était une bombe, on la laisse, sinon on met à EMPTY
+            if (grid[playerRow][playerCol] == CellType.PLAYER) {
+                grid[playerRow][playerCol] = CellType.EMPTY;
+            }
+            // S’il y a déjà une bombe sur la nouvelle case, on ne l’efface pas :
+            if (grid[newRow][newCol] == CellType.BOMB) {
+                // On place le joueur "par-dessus" pour l’affichage, mais on garde la bombe en dessous
+                // On va gérer ça dans l’affichage (GameViewController)
+                // On ne change pas le contenu de la case ici
+            } else {
+                grid[newRow][newCol] = CellType.PLAYER;
+            }
             playerRow = newRow;
             playerCol = newCol;
             return true;
