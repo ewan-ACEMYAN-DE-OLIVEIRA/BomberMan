@@ -7,27 +7,33 @@
 
 .cell-empty {
     -fx-background-color: #f8f8f8;
+    -fx-background-image: url("pelouse.png");
+    -fx-background-size: cover;
+    -fx-background-repeat: no-repeat;
 }
+
 .cell-wall {
     -fx-background-image: url("wall.png");
     -fx-background-size: cover;
 }
+
 .cell-destructible {
     -fx-background-image: url("destructible.png");
     -fx-background-size: cover;
-}
-
-.game-cell:hover {
-    -fx-cursor: hand;
-    -fx-opacity: 0.85;
 }
 
 .cell-player {
     -fx-background-color: #3a85ff;
 }
 
-.cell-empty {
-    -fx-background-image: url("floor.png");
+.cell-bomb {
+    -fx-background-image: url("bomb.png");
     -fx-background-size: cover;
-    -fx-background-repeat: no-repeat;
+}
+
+.cell-explosion {
+    -fx-background-color: #ff3333;
+    -fx-background-image: url("explosion.png"); /* optionnel */
+    -fx-background-size: cover;
+    -fx-opacity: 0.85;
 }
