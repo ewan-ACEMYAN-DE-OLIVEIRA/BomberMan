@@ -1,5 +1,6 @@
 package BomberMan;
 
+import javax.swing.*;
 import java.util.Random;
 
 public class GameModel {
@@ -24,13 +25,15 @@ public class GameModel {
     private boolean gameRunning = false;
     private int score = 0;
     private String gameStatus = "Prêt à jouer";
-    
+    private ImageIcon playerIcon;
+
     public GameModel() {
         resetGrid();
     }
     
     public void resetGrid() {
         // Bordures murs indestructibles
+
         for (int row = 0; row < GRID_HEIGHT; row++) {
             for (int col = 0; col < GRID_WIDTH; col++) {
                 if (row == 0 || col == 0 || row == GRID_HEIGHT-1 || col == GRID_WIDTH-1 || (row % 2 == 0 && col % 2 == 0)) {
@@ -44,18 +47,10 @@ public class GameModel {
         playerRow = 1;
         playerCol = 1;
         grid[playerRow][playerCol] = CellType.PLAYER;
-        
+        playerIcon = new ImageIcon("com/example/BomberMan/Personnages/Blanc/Face.png");
         // Ajoute des murs destructibles aléatoires (20% de la grille)
         addRandomDestructibleWalls(0.2);
     }
-
-
-
-
-
-
-
-
     private boolean isProtectedSpawnZone(int row, int col) {
         // Coin haut gauche (spawn joueur 1)
         if ((row == 1 && col == 1) || (row == 1 && col == 2) || (row == 2 && col == 1)) return true;
