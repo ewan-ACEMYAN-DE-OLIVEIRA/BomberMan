@@ -1,0 +1,39 @@
+.game-cell {
+    -fx-border-color: #b0b0b0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-effect: dropshadow(gaussian, #b0b0b0, 2, 0.2, 0, 1);
+}
+
+.cell-empty {
+    -fx-background-color: #f8f8f8;
+    -fx-background-image: url("pelouse.png");
+    -fx-background-size: cover;
+    -fx-background-repeat: no-repeat;
+}
+
+.cell-wall {
+    -fx-background-image: url("wall.png");
+    -fx-background-size: cover;
+}
+
+.cell-destructible {
+    -fx-background-image: url("destructible.png");
+    -fx-background-size: cover;
+}
+
+.cell-player {
+    -fx-background-color: #3a85ff;
+}
+
+.cell-bomb {
+    -fx-background-image: url("bomb.png");
+    -fx-background-size: cover;
+}
+
+.cell-explosion {
+    -fx-background-color: #ff3333;
+    -fx-background-image: url("explosion.png"); /* optionnel */
+    -fx-background-size: cover;
+    -fx-opacity: 0.85;
+}
