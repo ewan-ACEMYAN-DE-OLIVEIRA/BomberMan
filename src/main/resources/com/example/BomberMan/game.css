@@ -25,3 +25,9 @@
 .cell-player {
     -fx-background-color: #3a85ff;
 }
+
+.cell-empty {
+    -fx-background-image: url("floor.png");
+    -fx-background-size: cover;
+    -fx-background-repeat: no-repeat;
+}
