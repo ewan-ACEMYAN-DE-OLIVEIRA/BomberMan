@@ -1,8 +1,8 @@
-module com.example.bomberman {
+open module tp.intro.javafx {
+    requires javafx.base;
     requires javafx.controls;
+    requires javafx.graphics;
     requires javafx.fxml;
-    
-    exports BomberMan; // <-- Rends ton package accessible à JavaFX
-    
-    opens BomberMan to javafx.fxml; // <-- Permet à FXML d'accéder aux contrôleurs
+    requires java.desktop;
+    exports BomberMan;
 }
