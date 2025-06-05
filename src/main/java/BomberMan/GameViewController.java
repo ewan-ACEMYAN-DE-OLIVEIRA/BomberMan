@@ -2,6 +2,8 @@ package BomberMan;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
@@ -89,28 +91,19 @@ public class GameViewController {
         }
     }
     
-    // Explosion : 4 directions, 1 case de portée
     private void explodeBomb(int row, int col) {
+        // Bombe explose et détruit les murs destructibles dans les 4 directions (1 case)
         gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
-        int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} }; // haut, bas, gauche, droite
-        
+        int[][] dirs = { {0,0}, {-1,0}, {1,0}, {0,-1}, {0,1} };
         for (int[] d : dirs) {
             int r = row + d[0], c = col + d[1];
             if (gameModel.isValidPosition(r, c)) {
                 GameModel.CellType t = gameModel.getCellType(r, c);
-                if (t == GameModel.CellType.WALL) {
-                    // ne propage pas
-                } else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
+                if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 } else if (t == GameModel.CellType.BOMB) {
-                    // Explosion en chaîne
+                    // Enchaînement des explosions (optionnel)
                     explodeBomb(r, c);
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                } else if (t == GameModel.CellType.PLAYER) {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                    endGame();
-                } else {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 }
             }
         }
@@ -119,7 +112,6 @@ public class GameViewController {
         new Thread(() -> {
             try { Thread.sleep(400); } catch (InterruptedException ignored) {}
             javafx.application.Platform.runLater(() -> {
-                gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
                 for (int[] d : dirs) {
                     int r = row + d[0], c = col + d[1];
                     if (gameModel.isValidPosition(r, c)) {
@@ -132,38 +124,39 @@ public class GameViewController {
             });
         }).start();
     }
-    
-    private void endGame() {
-        gameModel.setGameRunning(false);
-        gameModel.setGameStatus("Game Over !");
-        statusLabel.setText(gameModel.getGameStatus());
-        messageLabel.setText("Le joueur a été touché ! Appuyez sur Reset pour recommencer.");
-    }
-    
+
     private void updateGridDisplay() {
         for (Node node : gameGrid.getChildren()) {
-            if (node instanceof StackPane) {
+            if (node instanceof StackPane cell) {
                 Integer col = GridPane.getColumnIndex(node);
                 Integer row = GridPane.getRowIndex(node);
                 if (col == null || row == null) continue;
-                
-                node.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion");
-                
-                boolean hasPlayer = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col);
-                boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB);
-                
-                if (hasPlayer && hasBomb) {
-                    node.getStyleClass().addAll("cell-bomb", "cell-player"); // joueur sur bombe
-                } else if (hasPlayer) {
-                    node.getStyleClass().add("cell-player");
-                } else {
-                    switch (gameModel.getCellType(row, col)) {
-                        case WALL -> node.getStyleClass().add("cell-wall");
-                        case DESTRUCTIBLE_WALL -> node.getStyleClass().add("cell-destructible");
-                        case BOMB -> node.getStyleClass().add("cell-bomb");
-                        case EXPLOSION -> node.getStyleClass().add("cell-explosion");
-                        default -> node.getStyleClass().add("cell-empty");
+                GameModel.CellType type = gameModel.getCellType(row, col);
+
+                cell.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion");
+                cell.getChildren().clear(); // Important: on enlève les anciennes images
+
+                switch (type) {
+                    case WALL -> cell.getStyleClass().add("cell-wall");
+                    case DESTRUCTIBLE_WALL -> cell.getStyleClass().add("cell-destructible");
+                    case PLAYER -> {
+                        cell.getStyleClass().add("cell-player");
+                        // Affichage image du personnage
+                        try {
+                            // Utilise le chemin d'accès du GameModel
+                            String imagePath = "/com/example/BomberMan/Personnages/Blanc/Face.png";
+                            Image playerImage = new Image(getClass().getResourceAsStream(imagePath));
+                            ImageView imageView = new ImageView(playerImage);
+                            imageView.setFitWidth(28);
+                            imageView.setFitHeight(28);
+                            cell.getChildren().add(imageView);
+                        } catch (Exception e) {
+                            // En cas d'erreur, on ignore l'image (affichage standard)
+                        }
                     }
+                    case BOMB -> cell.getStyleClass().add("cell-bomb");
+                    case EXPLOSION -> cell.getStyleClass().add("cell-explosion");
+                    default -> cell.getStyleClass().add("cell-empty");
                 }
             }
         }
