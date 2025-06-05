@@ -7,7 +7,7 @@
 
 .cell-empty {
     -fx-background-color: #f8f8f8;
-    -fx-background-image: url("floor.png");
+    -fx-background-image: url("pelouse.png");
     -fx-background-size: cover;
     -fx-background-repeat: no-repeat;
 }
