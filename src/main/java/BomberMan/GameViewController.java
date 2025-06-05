@@ -11,6 +11,7 @@ public class GameViewController {
     @FXML private Label scoreLabel;
     @FXML private Label statusLabel;
     @FXML private Label messageLabel;
+    @FXML private Label bombLabel; // Ajoute ce label dans ton FXML (ex: fx:id="bombLabel")
     
     private GameModel gameModel;
     private GameController gameController;
@@ -24,6 +25,7 @@ public class GameViewController {
         setupKeyHandlers();
         statusLabel.setText(gameModel.getGameStatus());
         scoreLabel.setText("0");
+        updateBombLabel();
     }
     
     private void setupGridDisplay() {
@@ -44,8 +46,8 @@ public class GameViewController {
     private void setupKeyHandlers() {
         gameGrid.setFocusTraversable(true);
         gameGrid.setOnKeyPressed(event -> {
+            if (!gameModel.isGameRunning() || !gameModel.isPlayerAlive()) return;
             boolean moved = false;
-            if (!gameModel.isGameRunning()) return;
             if (event.getCode() == KeyCode.Z) moved = gameModel.movePlayer(-1, 0); // haut
             if (event.getCode() == KeyCode.S) moved = gameModel.movePlayer(1, 0);  // bas
             if (event.getCode() == KeyCode.Q) moved = gameModel.movePlayer(0, -1); // gauche
@@ -73,10 +75,15 @@ public class GameViewController {
     }
     
     private void handlePlaceBomb() {
+        if (!gameModel.canPlaceBomb()) {
+            messageLabel.setText("Aucune bombe disponible !");
+            return;
+        }
         int row = gameModel.getPlayerRow();
         int col = gameModel.getPlayerCol();
         if (gameModel.placeBomb(row, col)) {
             updateGridDisplay();
+            updateBombLabel();
             // Lance un timer pour explosion
             new Thread(() -> {
                 try {
@@ -93,11 +100,15 @@ public class GameViewController {
         // Bombe explose et détruit les murs destructibles dans les 4 directions (1 case)
         gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
         int[][] dirs = { {0,0}, {-1,0}, {1,0}, {0,-1}, {0,1} };
+        boolean playerHit = false;
         for (int[] d : dirs) {
             int r = row + d[0], c = col + d[1];
             if (gameModel.isValidPosition(r, c)) {
                 GameModel.CellType t = gameModel.getCellType(r, c);
                 if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
+                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                } else if (t == GameModel.CellType.PLAYER) {
+                    playerHit = true;
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 } else if (t == GameModel.CellType.BOMB) {
                     // Enchaînement des explosions (optionnel)
@@ -106,6 +117,14 @@ public class GameViewController {
             }
         }
         updateGridDisplay();
+        gameModel.bombExploded();
+        updateBombLabel();
+        
+        if (playerHit) {
+            endGame();
+            return;
+        }
+        
         // Affiche l'explosion pendant 400ms puis repasse en EMPTY
         new Thread(() -> {
             try { Thread.sleep(400); } catch (InterruptedException ignored) {}
@@ -121,6 +140,15 @@ public class GameViewController {
                 updateGridDisplay();
             });
         }).start();
+    }
+    
+    private void endGame() {
+        gameModel.setPlayerAlive(false);
+        gameModel.setGameRunning(false);
+        gameModel.setGameStatus("Game Over !");
+        statusLabel.setText(gameModel.getGameStatus());
+        messageLabel.setText("Le joueur a été touché ! Appuyez sur Reset pour recommencer.");
+        updateGridDisplay();
     }
     
     private void updateGridDisplay() {
@@ -145,12 +173,19 @@ public class GameViewController {
         statusLabel.setText(gameModel.getGameStatus());
     }
     
+    private void updateBombLabel() {
+        if (bombLabel != null) {
+            bombLabel.setText("Bombes : " + (gameModel.getBombCount() - gameModel.getBombsPlaced()) + " / " + gameModel.getBombCount());
+        }
+    }
+    
     // Boutons UI
     
     @FXML
     private void handleStartGame() {
         gameController.startGame();
         updateGridDisplay();
+        updateBombLabel();
         messageLabel.setText("Partie démarrée !");
         gameGrid.requestFocus();
     }
@@ -167,6 +202,7 @@ public class GameViewController {
     private void handleResetGame() {
         gameController.resetGame();
         updateGridDisplay();
+        updateBombLabel();
         messageLabel.setText("Jeu réinitialisé !");
         gameGrid.requestFocus();
     }

@@ -20,10 +20,15 @@ public class GameModel {
     private int playerRow;
     private int playerCol;
     
+    // Compteur de bombes
+    private int bombCount = 10; // Max bombes posables
+    private int bombsPlaced = 0;
+    
     // Etat du jeu
     private boolean gameRunning = false;
     private int score = 0;
     private String gameStatus = "Prêt à jouer";
+    private boolean playerAlive = true;
     
     public GameModel() {
         resetGrid();
@@ -47,6 +52,12 @@ public class GameModel {
         
         // Ajoute des murs destructibles aléatoires (20% de la grille)
         addRandomDestructibleWalls(0.2);
+        
+        // Réinitialise les bombes
+        bombsPlaced = 0;
+        bombCount = 10;
+        playerAlive = true;
+        setGameRunning(false);
     }
 
 
@@ -133,13 +144,23 @@ public class GameModel {
     }
     
     // --- Bombe ---
+    public boolean canPlaceBomb() {
+        return bombsPlaced < bombCount;
+    }
     public boolean placeBomb(int row, int col) {
-        if (isValidPosition(row, col) && (grid[row][col] == CellType.EMPTY || grid[row][col] == CellType.PLAYER)) {
+        if (isValidPosition(row, col) && (grid[row][col] == CellType.EMPTY || grid[row][col] == CellType.PLAYER) && canPlaceBomb()) {
             grid[row][col] = CellType.BOMB;
+            bombsPlaced++;
             return true;
         }
         return false;
     }
+    public void bombExploded() {
+        if (bombsPlaced > 0) bombsPlaced--;
+    }
+    public int getBombCount() { return bombCount; }
+    public void setBombCount(int n) { bombCount = Math.max(1, n); }
+    public int getBombsPlaced() { return bombsPlaced; }
     
     // --- Etat du jeu ---
     public boolean isGameRunning() { return gameRunning; }
@@ -148,4 +169,6 @@ public class GameModel {
     public void setScore(int s) { this.score = s; }
     public String getGameStatus() { return gameStatus; }
     public void setGameStatus(String status) { this.gameStatus = status; }
+    public boolean isPlayerAlive() { return playerAlive; }
+    public void setPlayerAlive(boolean alive) { this.playerAlive = alive; }
 }

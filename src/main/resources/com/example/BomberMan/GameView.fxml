@@ -20,6 +20,10 @@
                 <Label text="Score:" />
                 <Label fx:id="scoreLabel" styleClass="score-value" text="0" />
 
+                <!-- Compteur de bombes -->
+                <Label text="Bombes:" />
+                <Label fx:id="bombLabel" styleClass="bomb-value" text="Bombes : 10 / 10" />
+
                 <Region HBox.hgrow="ALWAYS" />
 
                 <Label text="Statut:" />
