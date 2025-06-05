@@ -46,7 +46,17 @@ public class GameModel {
         // Ajoute des murs destructibles aléatoires (20% de la grille)
         addRandomDestructibleWalls(0.2);
     }
-    
+    private boolean isProtectedSpawnZone(int row, int col) {
+        // Coin haut gauche (spawn joueur 1)
+        if ((row == 1 && col == 1) || (row == 1 && col == 2) || (row == 2 && col == 1)) return true;
+        // Coin haut droite (spawn joueur 2)
+        if ((row == 1 && col == GRID_WIDTH - 2) || (row == 1 && col == GRID_WIDTH - 3) || (row == 2 && col == GRID_WIDTH - 2)) return true;
+        // Coin bas gauche (spawn joueur 3)
+        if ((row == GRID_HEIGHT - 2 && col == 1) || (row == GRID_HEIGHT - 3 && col == 1) || (row == GRID_HEIGHT - 2 && col == 2)) return true;
+        // Coin bas droite (spawn joueur 4)
+        if ((row == GRID_HEIGHT - 2 && col == GRID_WIDTH - 2) || (row == GRID_HEIGHT - 3 && col == GRID_WIDTH - 2) || (row == GRID_HEIGHT - 2 && col == GRID_WIDTH - 3)) return true;
+        return false;
+    }
     public void addRandomDestructibleWalls(double density) {
         Random rand = new Random();
         int placed = 0;
@@ -55,8 +65,8 @@ public class GameModel {
         while (placed < max && tries < 1000) {
             int row = 1 + rand.nextInt(GRID_HEIGHT - 2);
             int col = 1 + rand.nextInt(GRID_WIDTH - 2);
-            // Ne pas placer sur le joueur ni sur une case occupée
-            if (grid[row][col] == CellType.EMPTY && !(row == playerRow && col == playerCol)) {
+            // Ne pas placer sur les cases protégées
+            if (grid[row][col] == CellType.EMPTY && !isProtectedSpawnZone(row, col)) {
                 grid[row][col] = CellType.DESTRUCTIBLE_WALL;
                 placed++;
             }
