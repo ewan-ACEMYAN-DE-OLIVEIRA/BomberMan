@@ -23,12 +23,13 @@
 }
 
 .cell-player {
-    -fx-background-color: #3a85ff;
+    -fx-background-color: #00AC4B;
 }
 
 .cell-bomb {
     -fx-background-image: url("bomb.png");
     -fx-background-size: cover;
+    -fx-background-color: #00AC4B;
 }
 
 .cell-explosion {
