@@ -46,6 +46,7 @@ public class GameModel {
         // Ajoute des murs destructibles aléatoires (20% de la grille)
         addRandomDestructibleWalls(0.2);
     }
+
     private boolean isProtectedSpawnZone(int row, int col) {
         // Coin haut gauche (spawn joueur 1)
         if ((row == 1 && col == 1) || (row == 1 && col == 2) || (row == 2 && col == 1)) return true;
