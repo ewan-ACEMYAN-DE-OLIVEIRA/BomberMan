@@ -48,6 +48,12 @@ public class GameModel {
     }
 
 
+
+
+
+
+
+
     private boolean isProtectedSpawnZone(int row, int col) {
         // Coin haut gauche (spawn joueur 1)
         if ((row == 1 && col == 1) || (row == 1 && col == 2) || (row == 2 && col == 1)) return true;
