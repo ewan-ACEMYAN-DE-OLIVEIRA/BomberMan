@@ -89,19 +89,28 @@ public class GameViewController {
         }
     }
     
+    // Explosion : 4 directions, 1 case de portée
     private void explodeBomb(int row, int col) {
-        // Bombe explose et détruit les murs destructibles dans les 4 directions (1 case)
         gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
-        int[][] dirs = { {0,0}, {-1,0}, {1,0}, {0,-1}, {0,1} };
+        int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} }; // haut, bas, gauche, droite
+        
         for (int[] d : dirs) {
             int r = row + d[0], c = col + d[1];
             if (gameModel.isValidPosition(r, c)) {
                 GameModel.CellType t = gameModel.getCellType(r, c);
-                if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
+                if (t == GameModel.CellType.WALL) {
+                    // ne propage pas
+                } else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 } else if (t == GameModel.CellType.BOMB) {
-                    // Enchaînement des explosions (optionnel)
+                    // Explosion en chaîne
                     explodeBomb(r, c);
+                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                } else if (t == GameModel.CellType.PLAYER) {
+                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                    endGame();
+                } else {
+                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 }
             }
         }
@@ -110,6 +119,7 @@ public class GameViewController {
         new Thread(() -> {
             try { Thread.sleep(400); } catch (InterruptedException ignored) {}
             javafx.application.Platform.runLater(() -> {
+                gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
                 for (int[] d : dirs) {
                     int r = row + d[0], c = col + d[1];
                     if (gameModel.isValidPosition(r, c)) {
@@ -121,6 +131,13 @@ public class GameViewController {
                 updateGridDisplay();
             });
         }).start();
+    }
+    
+    private void endGame() {
+        gameModel.setGameRunning(false);
+        gameModel.setGameStatus("Game Over !");
+        statusLabel.setText(gameModel.getGameStatus());
+        messageLabel.setText("Le joueur a été touché ! Appuyez sur Reset pour recommencer.");
     }
     
     private void updateGridDisplay() {
