@@ -1,0 +1,8 @@
+à savoir 
+
+sur les bombes : elles explosent au bout de quelques seconde , sauf si elles sont touchées par l'explosion d'une autre bombe elles explosent au même moment. Une fois posée une bombe agit comme un mur.
+
+sur les bonus : un bonus permet de poser plus de bombes que d'habitude (de base on peut poser uniquement 2 bombes)
+
+                un bonus permet de d'augmenter la range des bombes
+
