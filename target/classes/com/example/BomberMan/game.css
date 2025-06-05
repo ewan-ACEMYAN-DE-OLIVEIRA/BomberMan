@@ -1,0 +1,33 @@
+.game-cell {
+    -fx-border-color: #b0b0b0;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-effect: dropshadow(gaussian, #b0b0b0, 2, 0.2, 0, 1);
+}
+
+.cell-empty {
+    -fx-background-color: #f8f8f8;
+}
+.cell-wall {
+    -fx-background-image: url("wall.png");
+    -fx-background-size: cover;
+}
+.cell-destructible {
+    -fx-background-image: url("destructible.png");
+    -fx-background-size: cover;
+}
+
+.game-cell:hover {
+    -fx-cursor: hand;
+    -fx-opacity: 0.85;
+}
+
+.cell-player {
+    -fx-background-color: #3a85ff;
+}
+
+.cell-empty {
+    -fx-background-image: url("floor.png");
+    -fx-background-size: cover;
+    -fx-background-repeat: no-repeat;
+}
