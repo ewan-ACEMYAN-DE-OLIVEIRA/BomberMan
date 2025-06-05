@@ -32,7 +32,6 @@ public class GameViewController {
     private GameModel gameModel;
     private GameController gameController;
 
-
     @FXML
     public void initialize() {
         gameModel = new GameModel();
