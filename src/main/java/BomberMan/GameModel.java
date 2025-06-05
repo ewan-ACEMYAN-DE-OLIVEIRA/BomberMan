@@ -7,7 +7,9 @@ public class GameModel {
         EMPTY,
         WALL,
         DESTRUCTIBLE_WALL,
-        PLAYER
+        PLAYER,
+        BOMB,
+        EXPLOSION
     }
     
     private static final int GRID_WIDTH = 13;
@@ -107,6 +109,15 @@ public class GameModel {
             grid[newRow][newCol] = CellType.PLAYER;
             playerRow = newRow;
             playerCol = newCol;
+            return true;
+        }
+        return false;
+    }
+    
+    // --- Bombe ---
+    public boolean placeBomb(int row, int col) {
+        if (isValidPosition(row, col) && (grid[row][col] == CellType.EMPTY || grid[row][col] == CellType.PLAYER)) {
+            grid[row][col] = CellType.BOMB;
             return true;
         }
         return false;
