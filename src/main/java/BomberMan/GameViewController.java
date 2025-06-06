@@ -3,12 +3,16 @@ package BomberMan;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class GameViewController {
@@ -26,6 +30,8 @@ public class GameViewController {
     private Button startButton;
     @FXML
     private Button pauseButton;
+    @FXML
+    private Button menuButton;
     
     private Timeline timer;
     private int elapsedSeconds = 0;
@@ -67,6 +73,22 @@ public class GameViewController {
     private void stopTimer() {
         if (timer != null) timer.stop();
         timerLabel.setText("Time: 00:00");
+    }
+    @FXML
+    private void handleReturnToMenu() {
+        try {
+            // Charge le menu
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/MenuView.fxml"));
+            Parent menuRoot = loader.load();
+            
+            // Remplace la scène actuelle par le menu
+            Stage stage = (Stage) menuButton.getScene().getWindow();
+            Scene scene = new Scene(menuRoot, stage.getScene().getWidth(), stage.getScene().getHeight());
+            stage.setScene(scene);
+            stage.setTitle("Menu BomberMan");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     private void setupGridDisplay() {
