@@ -21,12 +21,12 @@ public class GameViewController {
     @FXML
     private Label messageLabel;
     @FXML
-    private Label timerLabel; // Ajouté pour le timer
+    private Label timerLabel;
     @FXML
     private Button startButton;
     @FXML
     private Button pauseButton;
-
+    
     private Timeline timer;
     private int elapsedSeconds = 0;
     private GameModel gameModel;
@@ -44,7 +44,7 @@ public class GameViewController {
         pauseButton.setDisable(true);
         javafx.application.Platform.runLater(() -> handleStartGame());
     }
-
+    
     private void startTimer() {
         if (timer != null) timer.stop();
         elapsedSeconds = 0;
@@ -61,11 +61,11 @@ public class GameViewController {
     private void pauseTimer() {
         if (timer != null) timer.pause();
     }
-
+    
     private void resumeTimer() {
         if (timer != null) timer.play();
     }
-
+    
     private void stopTimer() {
         if (timer != null) timer.stop();
         timerLabel.setText("Time: 00:00");
@@ -114,11 +114,15 @@ public class GameViewController {
             messageLabel.setText("Mur indestructible");
         } else if (type == GameModel.CellType.PLAYER) {
             messageLabel.setText("Le joueur est ici !");
+        } else if (type == GameModel.CellType.BONUS_RANGE) {
+            messageLabel.setText("Bonus : +1 portée de bombe !");
+        } else if (type == GameModel.CellType.MALUS_RANGE) {
+            messageLabel.setText("Malus : -1 portée de bombe !");
         }
     }
     
     private void handlePlaceBomb() {
-        if (gameController.isPaused()) return;  // si jeu en pause impossible poser bombe
+        if (gameController.isPaused()) return;
         int row = gameModel.getPlayerRow();
         int col = gameModel.getPlayerCol();
         if (!gameModel.canPlaceBomb()) {
@@ -127,7 +131,6 @@ public class GameViewController {
         }
         if (gameModel.placeBomb(row, col)) {
             updateGridDisplay();
-            // Lance un timer pour explosion
             new Thread(() -> {
                 try {
                     Thread.sleep(1500); // 1.5 seconde avant explosion
@@ -140,25 +143,36 @@ public class GameViewController {
     }
     
     private void explodeBomb(int row, int col) {
-        // Bombe explose et détruit dans 4 directions (1 case)
-        gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
+        int range = gameModel.getBombRange();
+        boolean playerWasOnBomb = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col && gameModel.isBombUnderPlayer());
+        
+        // Si le joueur est sur la bombe, on laisse PLAYER sur la case mais retire le flag bombUnderPlayer
+        if (playerWasOnBomb) {
+            // Affiche l'explosion mais garde PLAYER pour l'affichage
+            gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
+        } else {
+            gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
+        }
         
         int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} };
         for (int[] d : dirs) {
-            int r = row + d[0], c = col + d[1];
-            if (gameModel.isValidPosition(r, c)) {
+            for (int dist = 1; dist <= range; dist++) {
+                int r = row + d[0] * dist, c = col + d[1] * dist;
+                if (!gameModel.isValidPosition(r, c)) break;
                 GameModel.CellType t = gameModel.getCellType(r, c);
                 if (t == GameModel.CellType.WALL) {
-                    // Stop : mur indestructible
+                    break;
                 } else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                    break;
                 } else if (t == GameModel.CellType.BOMB) {
-                    // Explosion en chaîne
                     explodeBomb(r, c);
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 } else if (t == GameModel.CellType.PLAYER) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                     endGame();
+                } else if (t == GameModel.CellType.BONUS_RANGE || t == GameModel.CellType.MALUS_RANGE) {
+                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 } else {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 }
@@ -168,16 +182,26 @@ public class GameViewController {
         updateGridDisplay();
         gameModel.bombExploded();
         
-        // Affiche l'explosion pendant 400ms puis repasse en EMPTY
+        // Nettoyage explosion après 400ms
         new Thread(() -> {
             try { Thread.sleep(400); } catch (InterruptedException ignored) {}
             javafx.application.Platform.runLater(() -> {
-                gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
+                // Nettoie centre
+                if (gameModel.getCellType(row, col) == GameModel.CellType.EXPLOSION) {
+                    // Si le joueur est resté sur place, on remet PLAYER sinon EMPTY
+                    if (playerWasOnBomb && gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col) {
+                        gameModel.setCellType(row, col, GameModel.CellType.PLAYER);
+                    } else {
+                        gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
+                    }
+                }
                 for (int[] d : dirs) {
-                    int r = row + d[0], c = col + d[1];
-                    if (gameModel.isValidPosition(r, c)) {
-                        if (gameModel.getCellType(r, c) == GameModel.CellType.EXPLOSION) {
-                            gameModel.setCellType(r, c, GameModel.CellType.EMPTY);
+                    for (int dist = 1; dist <= range; dist++) {
+                        int r = row + d[0] * dist, c = col + d[1] * dist;
+                        if (gameModel.isValidPosition(r, c)) {
+                            if (gameModel.getCellType(r, c) == GameModel.CellType.EXPLOSION) {
+                                gameModel.setCellType(r, c, GameModel.CellType.EMPTY);
+                            }
                         }
                     }
                 }
@@ -201,11 +225,15 @@ public class GameViewController {
                 Integer row = GridPane.getRowIndex(node);
                 if (col == null || row == null) continue;
                 
-                cell.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion");
+                cell.getStyleClass().removeAll(
+                        "cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb",
+                        "cell-explosion", "cell-bonus-range", "cell-malus-range"
+                );
                 cell.getChildren().clear();
                 
                 boolean hasPlayer = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col);
-                boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB);
+                boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB)
+                        || (hasPlayer && gameModel.isBombUnderPlayer());
                 
                 if (hasPlayer && hasBomb) {
                     cell.getStyleClass().addAll("cell-bomb", "cell-player");
@@ -233,6 +261,8 @@ public class GameViewController {
                         case DESTRUCTIBLE_WALL -> cell.getStyleClass().add("cell-destructible");
                         case BOMB -> cell.getStyleClass().add("cell-bomb");
                         case EXPLOSION -> cell.getStyleClass().add("cell-explosion");
+                        case BONUS_RANGE -> cell.getStyleClass().add("cell-bonus-range");
+                        case MALUS_RANGE -> cell.getStyleClass().add("cell-malus-range");
                         default -> cell.getStyleClass().add("cell-empty");
                     }
                 }
@@ -241,7 +271,7 @@ public class GameViewController {
         scoreLabel.setText(String.valueOf(gameModel.getScore()));
         statusLabel.setText(gameModel.getGameStatus());
     }
-
+    
     @FXML
     private void handleStartGame() {
         gameController.startGame();
@@ -250,8 +280,7 @@ public class GameViewController {
         startTimer();
         gameGrid.requestFocus();
         startButton.setDisable(true);
-        startButton.setDisable(true);
-        pauseButton.setDisable(false);;
+        pauseButton.setDisable(false);
     }
     
     @FXML
@@ -268,7 +297,6 @@ public class GameViewController {
             pauseButton.setText("Pause");
         }
         gameGrid.requestFocus();
-
     }
     
     @FXML
@@ -277,9 +305,9 @@ public class GameViewController {
         updateGridDisplay();
         messageLabel.setText("Jeu réinitialisé !");
         gameGrid.requestFocus();
-        startButton.setDisable(false); // Réactive le bouton
+        startButton.setDisable(false);
         pauseButton.setText("Pause");
-        pauseButton.setDisable(true); // Désactive le bouton Pause
+        pauseButton.setDisable(true);
         timerLabel.setText("Time: 00:00");
     }
     
@@ -294,6 +322,8 @@ public class GameViewController {
                     case PLAYER -> sb.append("P ");
                     case BOMB -> sb.append("B ");
                     case EXPLOSION -> sb.append("X ");
+                    case BONUS_RANGE -> sb.append("+ ");
+                    case MALUS_RANGE -> sb.append("- ");
                     default -> sb.append(". ");
                 }
             }
