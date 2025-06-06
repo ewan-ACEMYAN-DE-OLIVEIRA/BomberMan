@@ -1,6 +1,5 @@
 package BomberMan;
 
-import javax.swing.*;
 import java.util.Random;
 
 public class GameModel {
@@ -25,15 +24,13 @@ public class GameModel {
     private boolean gameRunning = false;
     private int score = 0;
     private String gameStatus = "Prêt à jouer";
-    private ImageIcon playerIcon;
-
+    
     public GameModel() {
         resetGrid();
     }
     
     public void resetGrid() {
         // Bordures murs indestructibles
-
         for (int row = 0; row < GRID_HEIGHT; row++) {
             for (int col = 0; col < GRID_WIDTH; col++) {
                 if (row == 0 || col == 0 || row == GRID_HEIGHT-1 || col == GRID_WIDTH-1 || (row % 2 == 0 && col % 2 == 0)) {
@@ -47,10 +44,10 @@ public class GameModel {
         playerRow = 1;
         playerCol = 1;
         grid[playerRow][playerCol] = CellType.PLAYER;
-        playerIcon = new ImageIcon("com/example/BomberMan/Personnages/Blanc/Face.png");
         // Ajoute des murs destructibles aléatoires (20% de la grille)
         addRandomDestructibleWalls(0.2);
     }
+    
     private boolean isProtectedSpawnZone(int row, int col) {
         // Coin haut gauche (spawn joueur 1)
         if ((row == 1 && col == 1) || (row == 1 && col == 2) || (row == 2 && col == 1)) return true;
@@ -62,6 +59,7 @@ public class GameModel {
         if ((row == GRID_HEIGHT - 2 && col == GRID_WIDTH - 2) || (row == GRID_HEIGHT - 3 && col == GRID_WIDTH - 2) || (row == GRID_HEIGHT - 2 && col == GRID_WIDTH - 3)) return true;
         return false;
     }
+    
     public void addRandomDestructibleWalls(double density) {
         Random rand = new Random();
         int placed = 0;
@@ -127,9 +125,7 @@ public class GameModel {
             }
             // S’il y a déjà une bombe sur la nouvelle case, on ne l’efface pas :
             if (grid[newRow][newCol] == CellType.BOMB) {
-                // On place le joueur "par-dessus" pour l’affichage, mais on garde la bombe en dessous
-                // On va gérer ça dans l’affichage (GameViewController)
-                // On ne change pas le contenu de la case ici
+                // On place le joueur par-dessus pour l’affichage (géré côté vue)
             } else {
                 grid[newRow][newCol] = CellType.PLAYER;
             }
