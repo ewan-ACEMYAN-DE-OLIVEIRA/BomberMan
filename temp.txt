@@ -1,0 +1,16 @@
+@FXML
+    private void handleReturnToMenu() {
+        try {
+            // Charge le menu
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/FXML/MenuView.fxml"));
+            Parent menuRoot = loader.load();
+
+            // Remplace la scène actuelle par le menu
+            Stage stage = (Stage) menuButton.getScene().getWindow();
+            Scene scene = new Scene(menuRoot, stage.getScene().getWidth(), stage.getScene().getHeight());
+            stage.setScene(scene);
+            stage.setTitle("Menu BomberMan");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
