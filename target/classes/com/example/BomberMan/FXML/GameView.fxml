@@ -6,7 +6,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="BomberMan.GameViewController"
-            stylesheets="@game.css">
+            stylesheets="@../game.css">
     <top>
         <!-- Barre d'information du jeu façon Bomberman -->
         <VBox spacing="8.0" styleClass="info-panel">

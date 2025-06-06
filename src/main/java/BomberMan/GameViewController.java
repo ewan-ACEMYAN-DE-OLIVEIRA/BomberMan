@@ -26,12 +26,15 @@ public class GameViewController {
     private Button startButton;
     @FXML
     private Button pauseButton;
-    
+
     private Timeline timer;
+    private Timeline aiTimeline;
+
     private int elapsedSeconds = 0;
     private GameModel gameModel;
     private GameController gameController;
-    
+    private boolean vsIA = false;
+
     @FXML
     public void initialize() {
         gameModel = new GameModel();
@@ -42,9 +45,14 @@ public class GameViewController {
         statusLabel.setText(gameModel.getGameStatus());
         scoreLabel.setText("0");
         pauseButton.setDisable(true);
-        javafx.application.Platform.runLater(() -> handleStartGame());
+        javafx.application.Platform.runLater(this::handleStartGame);
     }
-    
+
+    public void setVsIA(boolean vsIA) { this.vsIA = vsIA; }
+    public void postInit() {
+        if (vsIA) setupAITimeline();
+    }
+
     private void startTimer() {
         if (timer != null) timer.stop();
         elapsedSeconds = 0;
@@ -58,19 +66,30 @@ public class GameViewController {
         timer.setCycleCount(Timeline.INDEFINITE);
         timer.play();
     }
-    private void pauseTimer() {
-        if (timer != null) timer.pause();
-    }
-    
-    private void resumeTimer() {
-        if (timer != null) timer.play();
-    }
-    
+    private void pauseTimer() { if (timer != null) timer.pause(); }
+    private void resumeTimer() { if (timer != null) timer.play(); }
     private void stopTimer() {
         if (timer != null) timer.stop();
         timerLabel.setText("Time: 00:00");
     }
-    
+
+    private void setupAITimeline() {
+        aiTimeline = new Timeline(new KeyFrame(Duration.seconds(0.6), e -> moveAIPlayer()));
+        aiTimeline.setCycleCount(Timeline.INDEFINITE);
+        aiTimeline.play();
+    }
+
+    private void moveAIPlayer() {
+        if (!gameModel.isGameRunning() || gameController.isPaused()) return;
+        int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} };
+        java.util.List<int[]> dirList = java.util.Arrays.asList(dirs);
+        java.util.Collections.shuffle(dirList);
+        for (int[] d : dirList) {
+            if (gameModel.moveAI(d[0], d[1])) break;
+        }
+        updateGridDisplay();
+    }
+
     private void setupGridDisplay() {
         gameGrid.getChildren().clear();
         for (int row = 0; row < GameModel.getGridHeight(); row++) {
@@ -91,7 +110,6 @@ public class GameViewController {
         gameGrid.setOnKeyPressed(event -> {
             boolean moved = false;
             if (!gameModel.isGameRunning() || gameController.isPaused()) return;
-            // On met à jour la direction même si le déplacement échoue
             if (event.getCode() == KeyCode.Z) {
                 gameModel.setPlayerDirection(GameModel.Direction.UP);
                 moved = gameModel.movePlayer(-1, 0);
@@ -109,36 +127,31 @@ public class GameViewController {
                 moved = gameModel.movePlayer(0, 1);
             }
             if (event.getCode() == KeyCode.SPACE) handlePlaceBomb();
-
-            // Toujours mettre à jour la vue si une touche directionnelle est appuyée
             if (event.getCode() == KeyCode.Z || event.getCode() == KeyCode.S ||
                     event.getCode() == KeyCode.Q || event.getCode() == KeyCode.D) {
                 updateGridDisplay();
             }
         });
     }
-    
+
     private void handleCellClick(int row, int col) {
         GameModel.CellType type = gameModel.getCellType(row, col);
-        if (type == GameModel.CellType.DESTRUCTIBLE_WALL) {
-            boolean destroyed = gameController.destroyWall(row, col);
-            if (destroyed) {
-                messageLabel.setText("Mur destructible détruit !");
-                updateGridDisplay();
+        switch (type) {
+            case DESTRUCTIBLE_WALL -> {
+                boolean destroyed = gameController.destroyWall(row, col);
+                if (destroyed) {
+                    messageLabel.setText("Mur destructible détruit !");
+                    updateGridDisplay();
+                }
             }
-        } else if (type == GameModel.CellType.EMPTY) {
-            messageLabel.setText("Case vide");
-        } else if (type == GameModel.CellType.WALL) {
-            messageLabel.setText("Mur indestructible");
-        } else if (type == GameModel.CellType.PLAYER) {
-            messageLabel.setText("Le joueur est ici !");
-        } else if (type == GameModel.CellType.BONUS_RANGE) {
-            messageLabel.setText("Bonus : +1 portée de bombe !");
-        } else if (type == GameModel.CellType.MALUS_RANGE) {
-            messageLabel.setText("Malus : -1 portée de bombe !");
+            case EMPTY -> messageLabel.setText("Case vide");
+            case WALL -> messageLabel.setText("Mur indestructible");
+            case PLAYER -> messageLabel.setText("Le joueur est ici !");
+            case BONUS_RANGE -> messageLabel.setText("Bonus : +1 portée de bombe !");
+            case MALUS_RANGE -> messageLabel.setText("Malus : -1 portée de bombe !");
         }
     }
-    
+
     private void handlePlaceBomb() {
         if (gameController.isPaused()) return;
         int row = gameModel.getPlayerRow();
@@ -150,37 +163,25 @@ public class GameViewController {
         if (gameModel.placeBomb(row, col)) {
             updateGridDisplay();
             new Thread(() -> {
-                try {
-                    Thread.sleep(1500); // 1.5 seconde avant explosion
-                } catch (InterruptedException ignored) {}
-                javafx.application.Platform.runLater(() -> {
-                    explodeBomb(row, col);
-                });
+                try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+                javafx.application.Platform.runLater(() -> explodeBomb(row, col));
             }).start();
         }
     }
-    
+
     private void explodeBomb(int row, int col) {
         int range = gameModel.getBombRange();
         boolean playerWasOnBomb = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col && gameModel.isBombUnderPlayer());
-        
-        // Si le joueur est sur la bombe, on laisse PLAYER sur la case mais retire le flag bombUnderPlayer
-        if (playerWasOnBomb) {
-            // Affiche l'explosion mais garde PLAYER pour l'affichage
-            gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
-        } else {
-            gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
-        }
-        
+        gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
+
         int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} };
         for (int[] d : dirs) {
             for (int dist = 1; dist <= range; dist++) {
                 int r = row + d[0] * dist, c = col + d[1] * dist;
                 if (!gameModel.isValidPosition(r, c)) break;
                 GameModel.CellType t = gameModel.getCellType(r, c);
-                if (t == GameModel.CellType.WALL) {
-                    break;
-                } else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
+                if (t == GameModel.CellType.WALL) break;
+                else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                     break;
                 } else if (t == GameModel.CellType.BOMB) {
@@ -196,30 +197,27 @@ public class GameViewController {
                 }
             }
         }
-        
+
         updateGridDisplay();
         gameModel.bombExploded();
-        
-        // Nettoyage explosion après 400ms
+
         new Thread(() -> {
             try { Thread.sleep(400); } catch (InterruptedException ignored) {}
             javafx.application.Platform.runLater(() -> {
-                // Nettoie centre
                 if (gameModel.getCellType(row, col) == GameModel.CellType.EXPLOSION) {
-                    // Si le joueur est resté sur place, on remet PLAYER sinon EMPTY
                     if (playerWasOnBomb && gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col) {
                         gameModel.setCellType(row, col, GameModel.CellType.PLAYER);
                     } else {
                         gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
                     }
                 }
-                for (int[] d : dirs) {
+                int[][] dirs2 = { {-1,0}, {1,0}, {0,-1}, {0,1} };
+                for (int[] d : dirs2) {
                     for (int dist = 1; dist <= range; dist++) {
                         int r = row + d[0] * dist, c = col + d[1] * dist;
-                        if (gameModel.isValidPosition(r, c)) {
-                            if (gameModel.getCellType(r, c) == GameModel.CellType.EXPLOSION) {
-                                gameModel.setCellType(r, c, GameModel.CellType.EMPTY);
-                            }
+                        if (gameModel.isValidPosition(r, c) &&
+                                gameModel.getCellType(r, c) == GameModel.CellType.EXPLOSION) {
+                            gameModel.setCellType(r, c, GameModel.CellType.EMPTY);
                         }
                     }
                 }
@@ -227,13 +225,14 @@ public class GameViewController {
             });
         }).start();
     }
-    
+
     private void endGame() {
         gameModel.setGameRunning(false);
         gameModel.setGameStatus("Game Over !");
         statusLabel.setText(gameModel.getGameStatus());
         messageLabel.setText("Le joueur a été touché ! Appuyez sur Reset pour recommencer.");
         updateGridDisplay();
+        if (aiTimeline != null) aiTimeline.stop();
     }
 
     private void updateGridDisplay() {
@@ -243,11 +242,12 @@ public class GameViewController {
                 Integer row = GridPane.getRowIndex(node);
                 if (col == null || row == null) continue;
 
-                cell.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion");
+                cell.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion", "cell-ai", "cell-bonus-range", "cell-malus-range");
                 cell.getChildren().clear();
 
                 boolean hasPlayer = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col);
                 boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB);
+                boolean hasAI = (gameModel.getAIRow() == row && gameModel.getAICol() == col);
 
                 if (hasPlayer && hasBomb) {
                     cell.getStyleClass().addAll("cell-bomb", "cell-player");
@@ -273,6 +273,16 @@ public class GameViewController {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                } else if (hasAI) {
+                    cell.getStyleClass().add("cell-ai");
+                    try {
+                        String imagePath = "/com/example/BomberMan/Personnages/Blanc/IA.png";
+                        Image aiImage = new Image(getClass().getResourceAsStream(imagePath));
+                        ImageView imageView = new ImageView(aiImage);
+                        imageView.setFitWidth(28);
+                        imageView.setFitHeight(28);
+                        cell.getChildren().add(imageView);
+                    } catch (Exception e) {}
                 } else {
                     switch (gameModel.getCellType(row, col)) {
                         case WALL -> cell.getStyleClass().add("cell-wall");
@@ -290,7 +300,6 @@ public class GameViewController {
         statusLabel.setText(gameModel.getGameStatus());
     }
 
-    // Cette méthode renvoie le chemin de l'image en fonction de la direction du joueur
     private String getPlayerImagePath(GameModel.Direction direction) {
         return switch (direction) {
             case UP -> "/com/example/BomberMan/Personnages/Blanc/Dos.png";
@@ -300,7 +309,6 @@ public class GameViewController {
         };
     }
 
-    
     @FXML
     private void handleStartGame() {
         gameController.startGame();
@@ -311,7 +319,7 @@ public class GameViewController {
         startButton.setDisable(true);
         pauseButton.setDisable(false);
     }
-    
+
     @FXML
     private void handlePauseGame() {
         gameController.pauseGame();
@@ -319,10 +327,12 @@ public class GameViewController {
         if (gameController.isPaused()) {
             messageLabel.setText("Jeu en pause");
             pauseTimer();
+            if (aiTimeline != null) aiTimeline.pause();
             pauseButton.setText("Reprendre");
         } else {
             messageLabel.setText("Jeu relancé !");
             resumeTimer();
+            if (aiTimeline != null) aiTimeline.play();
             pauseButton.setText("Pause");
         }
         gameGrid.requestFocus();
@@ -337,10 +347,15 @@ public class GameViewController {
         startButton.setDisable(false);
         pauseButton.setText("Pause");
         pauseButton.setDisable(true);
-        stopTimer();              // <-- stoppe le timer et remet le label à 0
-        elapsedSeconds = 0;       // <-- réinitialise le compteur (optionnel car déjà fait dans stopTimer)
+        stopTimer();
+        elapsedSeconds = 0;
+        if (aiTimeline != null) {
+            aiTimeline.stop();
+            aiTimeline = null;
+        }
+        if (vsIA) setupAITimeline();
     }
-    
+
     @FXML
     private void handleDebugGrid() {
         StringBuilder sb = new StringBuilder();

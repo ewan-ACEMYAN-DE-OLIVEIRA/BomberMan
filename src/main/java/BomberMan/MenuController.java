@@ -7,20 +7,26 @@ import javafx.stage.Stage;
 public class MenuController {
     @FXML private Button playButton;
     @FXML private Button quitButton;
+    @FXML private Button battleButton;
 
     @FXML
     public void initialize() {
-        playButton.setOnAction(event -> {
-            try {
-                // On récupère la fenêtre actuelle du menu
-                Stage menuStage = (Stage) playButton.getScene().getWindow();
-                // On ferme le menu et on lance la fenêtre de jeu dans la même fenêtre
-                BomberManApp app = new BomberManApp();
-                app.launchGame(menuStage);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        playButton.setOnAction(event -> launchGame(false));
+        battleButton.setOnAction(event -> launchGame(true));
         quitButton.setOnAction(event -> ((Stage) quitButton.getScene().getWindow()).close());
+    }
+
+    private void launchGame(boolean vsIA) {
+        Stage menuStage = (Stage) playButton.getScene().getWindow();
+        try {
+            BomberManApp app = new BomberManApp();
+            if (vsIA) {
+                app.launchGameVsIA(menuStage);
+            } else {
+                app.launchGame(menuStage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
