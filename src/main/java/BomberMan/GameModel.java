@@ -116,7 +116,11 @@ public class GameModel {
     
     public void addBonusAndMalus() {
         Random rand = new Random();
-        for (int i = 0; i < 3; i++) {
+        // Tire un nombre aléatoire de bonus/malus dans un intervalle (par exemple 3 à 7)
+        int bonusCount = 3 + rand.nextInt(5); // 3 à 7 bonus
+        int malusCount = 2 + rand.nextInt(5); // 2 à 6 malus
+        
+        for(int i = 0; i < bonusCount; i++) {
             int row, col;
             do {
                 row = 1 + rand.nextInt(GRID_HEIGHT - 2);
@@ -124,7 +128,7 @@ public class GameModel {
             } while (grid[row][col] != CellType.EMPTY || isProtectedSpawnZone(row, col));
             grid[row][col] = CellType.BONUS_RANGE;
         }
-        for (int i = 0; i < 3; i++) {
+        for(int i = 0; i < malusCount; i++) {
             int row, col;
             do {
                 row = 1 + rand.nextInt(GRID_HEIGHT - 2);

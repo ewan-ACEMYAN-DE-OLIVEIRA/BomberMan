@@ -173,5 +173,7 @@
     -fx-background-image: url("bomb.png");
     -fx-background-size: cover;
     -fx-background-color: #00AC4B;}
-.cell-bonus-range { -fx-background-color: #8f8; }
-.cell-malus-range { -fx-background-color: #f88; }
+.cell-bonus-range { -fx-background-color: #00AC4B;
+    -fx-background-image: url("bonus.png");}
+.cell-malus-range { -fx-background-color: #00AC4B;
+    -fx-background-image: url("bonus.png");}
