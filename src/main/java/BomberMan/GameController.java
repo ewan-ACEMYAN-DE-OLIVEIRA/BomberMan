@@ -38,6 +38,7 @@ public class GameController {
         gameModel.resetGrid();
         gameModel.setScore(0);
         gameModel.setGameStatus("Jeu réinitialisé");
+        gameModel.setPlayerDirection(GameModel.Direction.DOWN);
     }
     
     public void stopGame() {
