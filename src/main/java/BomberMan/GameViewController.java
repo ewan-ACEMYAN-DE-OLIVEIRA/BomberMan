@@ -215,10 +215,14 @@ public class GameViewController {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                     gameModel.killPlayer(1);
                     messageLabel.setText("Joueur 2 a gagné !");
+                    pauseButton.setDisable(true);
+                    pauseTimer();
                 } else if (t == GameModel.CellType.PLAYER2) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                     gameModel.killPlayer(2);
                     messageLabel.setText("Joueur 1 a gagné !");
+                    pauseButton.setDisable(true);
+                    pauseTimer();
                 } else if (t == GameModel.CellType.BONUS_RANGE || t == GameModel.CellType.MALUS_RANGE) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 } else {
