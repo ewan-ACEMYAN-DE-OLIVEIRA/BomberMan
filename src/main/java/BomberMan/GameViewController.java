@@ -85,18 +85,36 @@ public class GameViewController {
             }
         }
     }
-    
+
     private void setupKeyHandlers() {
         gameGrid.setFocusTraversable(true);
         gameGrid.setOnKeyPressed(event -> {
             boolean moved = false;
             if (!gameModel.isGameRunning() || gameController.isPaused()) return;
-            if (event.getCode() == KeyCode.Z) moved = gameModel.movePlayer(-1, 0); // haut
-            if (event.getCode() == KeyCode.S) moved = gameModel.movePlayer(1, 0);  // bas
-            if (event.getCode() == KeyCode.Q) moved = gameModel.movePlayer(0, -1); // gauche
-            if (event.getCode() == KeyCode.D) moved = gameModel.movePlayer(0, 1);  // droite
+            // On met à jour la direction même si le déplacement échoue
+            if (event.getCode() == KeyCode.Z) {
+                gameModel.setPlayerDirection(GameModel.Direction.UP);
+                moved = gameModel.movePlayer(-1, 0);
+            }
+            if (event.getCode() == KeyCode.S) {
+                gameModel.setPlayerDirection(GameModel.Direction.DOWN);
+                moved = gameModel.movePlayer(1, 0);
+            }
+            if (event.getCode() == KeyCode.Q) {
+                gameModel.setPlayerDirection(GameModel.Direction.LEFT);
+                moved = gameModel.movePlayer(0, -1);
+            }
+            if (event.getCode() == KeyCode.D) {
+                gameModel.setPlayerDirection(GameModel.Direction.RIGHT);
+                moved = gameModel.movePlayer(0, 1);
+            }
             if (event.getCode() == KeyCode.SPACE) handlePlaceBomb();
-            if (moved) updateGridDisplay();
+
+            // Toujours mettre à jour la vue si une touche directionnelle est appuyée
+            if (event.getCode() == KeyCode.Z || event.getCode() == KeyCode.S ||
+                    event.getCode() == KeyCode.Q || event.getCode() == KeyCode.D) {
+                updateGridDisplay();
+            }
         });
     }
     
@@ -217,44 +235,44 @@ public class GameViewController {
         messageLabel.setText("Le joueur a été touché ! Appuyez sur Reset pour recommencer.");
         updateGridDisplay();
     }
-    
+
     private void updateGridDisplay() {
         for (Node node : gameGrid.getChildren()) {
             if (node instanceof StackPane cell) {
                 Integer col = GridPane.getColumnIndex(node);
                 Integer row = GridPane.getRowIndex(node);
                 if (col == null || row == null) continue;
-                
-                cell.getStyleClass().removeAll(
-                        "cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb",
-                        "cell-explosion", "cell-bonus-range", "cell-malus-range"
-                );
+
+                cell.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion");
                 cell.getChildren().clear();
-                
+
                 boolean hasPlayer = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col);
-                boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB)
-                        || (hasPlayer && gameModel.isBombUnderPlayer());
-                
+                boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB);
+
                 if (hasPlayer && hasBomb) {
                     cell.getStyleClass().addAll("cell-bomb", "cell-player");
                     try {
-                        String imagePath = "/com/example/BomberMan/Personnages/Blanc/Face.png";
+                        String imagePath = getPlayerImagePath(gameModel.getPlayerDirection());
                         Image playerImage = new Image(getClass().getResourceAsStream(imagePath));
                         ImageView imageView = new ImageView(playerImage);
                         imageView.setFitWidth(28);
                         imageView.setFitHeight(28);
                         cell.getChildren().add(imageView);
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else if (hasPlayer) {
                     cell.getStyleClass().add("cell-player");
                     try {
-                        String imagePath = "/com/example/BomberMan/Personnages/Blanc/Face.png";
+                        String imagePath = getPlayerImagePath(gameModel.getPlayerDirection());
                         Image playerImage = new Image(getClass().getResourceAsStream(imagePath));
                         ImageView imageView = new ImageView(playerImage);
                         imageView.setFitWidth(28);
                         imageView.setFitHeight(28);
                         cell.getChildren().add(imageView);
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     switch (gameModel.getCellType(row, col)) {
                         case WALL -> cell.getStyleClass().add("cell-wall");
@@ -271,6 +289,17 @@ public class GameViewController {
         scoreLabel.setText(String.valueOf(gameModel.getScore()));
         statusLabel.setText(gameModel.getGameStatus());
     }
+
+    // Cette méthode renvoie le chemin de l'image en fonction de la direction du joueur
+    private String getPlayerImagePath(GameModel.Direction direction) {
+        return switch (direction) {
+            case UP -> "/com/example/BomberMan/Personnages/Blanc/Dos.png";
+            case DOWN -> "/com/example/BomberMan/Personnages/Blanc/Face.png";
+            case LEFT -> "/com/example/BomberMan/Personnages/Blanc/Gauche.png";
+            case RIGHT -> "/com/example/BomberMan/Personnages/Blanc/Droite.png";
+        };
+    }
+
     
     @FXML
     private void handleStartGame() {

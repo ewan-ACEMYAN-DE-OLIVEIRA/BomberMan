@@ -13,6 +13,16 @@ public class GameModel {
         BONUS_RANGE,
         MALUS_RANGE
     }
+    public enum Direction {
+        UP,
+        DOWN,
+        LEFT,
+        RIGHT
+    }
+    private Direction playerDirection = Direction.DOWN; // Par défaut vers le bas
+
+    public Direction getPlayerDirection() { return playerDirection; }
+    public void setPlayerDirection(Direction dir) { playerDirection = dir; }
     
     private static final int GRID_WIDTH = 13;
     private static final int GRID_HEIGHT = 11;
@@ -155,8 +165,14 @@ public class GameModel {
                 grid[row][col] == CellType.BONUS_RANGE ||
                 grid[row][col] == CellType.MALUS_RANGE;
     }
-    
+
     public boolean movePlayer(int dRow, int dCol) {
+        // MAJ de la direction selon le déplacement voulu (toujours)
+        if (dRow == -1) playerDirection = Direction.UP;
+        else if (dRow == 1) playerDirection = Direction.DOWN;
+        else if (dCol == -1) playerDirection = Direction.LEFT;
+        else if (dCol == 1) playerDirection = Direction.RIGHT;
+
         int newRow = playerRow + dRow;
         int newCol = playerCol + dCol;
         if (!isValidPosition(newRow, newCol)) return false;
