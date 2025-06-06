@@ -3,16 +3,12 @@ package BomberMan;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 
 public class GameViewController {
@@ -30,14 +26,15 @@ public class GameViewController {
     private Button startButton;
     @FXML
     private Button pauseButton;
-    @FXML
-    private Button menuButton;
-    
+
     private Timeline timer;
+    private Timeline aiTimeline;
+
     private int elapsedSeconds = 0;
     private GameModel gameModel;
     private GameController gameController;
-    
+    private boolean vsIA = false;
+
     @FXML
     public void initialize() {
         gameModel = new GameModel();
@@ -48,9 +45,14 @@ public class GameViewController {
         statusLabel.setText(gameModel.getGameStatus());
         scoreLabel.setText("0");
         pauseButton.setDisable(true);
-        javafx.application.Platform.runLater(() -> handleStartGame());
+        javafx.application.Platform.runLater(this::handleStartGame);
     }
-    
+
+    public void setVsIA(boolean vsIA) { this.vsIA = vsIA; }
+    public void postInit() {
+        if (vsIA) setupAITimeline();
+    }
+
     private void startTimer() {
         if (timer != null) timer.stop();
         elapsedSeconds = 0;
@@ -64,33 +66,30 @@ public class GameViewController {
         timer.setCycleCount(Timeline.INDEFINITE);
         timer.play();
     }
-    private void pauseTimer() {
-        if (timer != null) timer.pause();
-    }
-    private void resumeTimer() {
-        if (timer != null) timer.play();
-    }
+    private void pauseTimer() { if (timer != null) timer.pause(); }
+    private void resumeTimer() { if (timer != null) timer.play(); }
     private void stopTimer() {
         if (timer != null) timer.stop();
         timerLabel.setText("Time: 00:00");
     }
-    @FXML
-    private void handleReturnToMenu() {
-        try {
-            // Charge le menu
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/MenuView.fxml"));
-            Parent menuRoot = loader.load();
-            
-            // Remplace la scène actuelle par le menu
-            Stage stage = (Stage) menuButton.getScene().getWindow();
-            Scene scene = new Scene(menuRoot, stage.getScene().getWidth(), stage.getScene().getHeight());
-            stage.setScene(scene);
-            stage.setTitle("Menu BomberMan");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+
+    private void setupAITimeline() {
+        aiTimeline = new Timeline(new KeyFrame(Duration.seconds(0.6), e -> moveAIPlayer()));
+        aiTimeline.setCycleCount(Timeline.INDEFINITE);
+        aiTimeline.play();
     }
-    
+
+    private void moveAIPlayer() {
+        if (!gameModel.isGameRunning() || gameController.isPaused()) return;
+        int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} };
+        java.util.List<int[]> dirList = java.util.Arrays.asList(dirs);
+        java.util.Collections.shuffle(dirList);
+        for (int[] d : dirList) {
+            if (gameModel.moveAI(d[0], d[1])) break;
+        }
+        updateGridDisplay();
+    }
+
     private void setupGridDisplay() {
         gameGrid.getChildren().clear();
         for (int row = 0; row < GameModel.getGridHeight(); row++) {
@@ -105,146 +104,92 @@ public class GameViewController {
             }
         }
     }
-    
+
     private void setupKeyHandlers() {
         gameGrid.setFocusTraversable(true);
         gameGrid.setOnKeyPressed(event -> {
             boolean moved = false;
             if (!gameModel.isGameRunning() || gameController.isPaused()) return;
-            
-            switch (event.getCode()) {
-                // Joueur 1
-                case Z -> {
-                    gameModel.setPlayer1Direction(GameModel.Direction.UP);
-                    moved = gameModel.movePlayer1(-1, 0);
-                }
-                case S -> {
-                    gameModel.setPlayer1Direction(GameModel.Direction.DOWN);
-                    moved = gameModel.movePlayer1(1, 0);
-                }
-                case Q -> {
-                    gameModel.setPlayer1Direction(GameModel.Direction.LEFT);
-                    moved = gameModel.movePlayer1(0, -1);
-                }
-                case D -> {
-                    gameModel.setPlayer1Direction(GameModel.Direction.RIGHT);
-                    moved = gameModel.movePlayer1(0, 1);
-                }
-                case SPACE -> handlePlaceBomb(1);
-                
-                // Joueur 2
-                case I -> {
-                    gameModel.setPlayer2Direction(GameModel.Direction.UP);
-                    moved = gameModel.movePlayer2(-1, 0);
-                }
-                case K -> {
-                    gameModel.setPlayer2Direction(GameModel.Direction.DOWN);
-                    moved = gameModel.movePlayer2(1, 0);
-                }
-                case J -> {
-                    gameModel.setPlayer2Direction(GameModel.Direction.LEFT);
-                    moved = gameModel.movePlayer2(0, -1);
-                }
-                case L -> {
-                    gameModel.setPlayer2Direction(GameModel.Direction.RIGHT);
-                    moved = gameModel.movePlayer2(0, 1);
-                }
-                case ENTER -> handlePlaceBomb(2);
+            if (event.getCode() == KeyCode.Z) {
+                gameModel.setPlayerDirection(GameModel.Direction.UP);
+                moved = gameModel.movePlayer(-1, 0);
             }
-            
-            if (moved) updateGridDisplay();
-            gameGrid.requestFocus();
-            
-            // Toujours mettre à jour la vue si une touche directionnelle est appuyée
-            if (switch (event.getCode()) {
-                case Z, S, Q, D, I, K, J, L -> true;
-                default -> false;
-            }) updateGridDisplay();
-        });
-    }
-    
-    private void handleCellClick(int row, int col) {
-        GameModel.CellType type = gameModel.getCellType(row, col);
-        if (type == GameModel.CellType.DESTRUCTIBLE_WALL) {
-            boolean destroyed = gameController.destroyWall(row, col);
-            if (destroyed) {
-                messageLabel.setText("Mur destructible détruit !");
+            if (event.getCode() == KeyCode.S) {
+                gameModel.setPlayerDirection(GameModel.Direction.DOWN);
+                moved = gameModel.movePlayer(1, 0);
+            }
+            if (event.getCode() == KeyCode.Q) {
+                gameModel.setPlayerDirection(GameModel.Direction.LEFT);
+                moved = gameModel.movePlayer(0, -1);
+            }
+            if (event.getCode() == KeyCode.D) {
+                gameModel.setPlayerDirection(GameModel.Direction.RIGHT);
+                moved = gameModel.movePlayer(0, 1);
+            }
+            if (event.getCode() == KeyCode.SPACE) handlePlaceBomb();
+            if (event.getCode() == KeyCode.Z || event.getCode() == KeyCode.S ||
+                    event.getCode() == KeyCode.Q || event.getCode() == KeyCode.D) {
                 updateGridDisplay();
             }
-        } else if (type == GameModel.CellType.EMPTY) {
-            messageLabel.setText("Case vide");
-        } else if (type == GameModel.CellType.WALL) {
-            messageLabel.setText("Mur indestructible");
-        } else if (type == GameModel.CellType.PLAYER1) {
-            messageLabel.setText("Joueur 1 ici !");
-        } else if (type == GameModel.CellType.PLAYER2) {
-            messageLabel.setText("Joueur 2 ici !");
-        } else if (type == GameModel.CellType.BONUS_RANGE) {
-            messageLabel.setText("Bonus : +1 portée de bombe !");
-        } else if (type == GameModel.CellType.MALUS_RANGE) {
-            messageLabel.setText("Malus : -1 portée de bombe !");
+        });
+    }
+
+    private void handleCellClick(int row, int col) {
+        GameModel.CellType type = gameModel.getCellType(row, col);
+        switch (type) {
+            case DESTRUCTIBLE_WALL -> {
+                boolean destroyed = gameController.destroyWall(row, col);
+                if (destroyed) {
+                    messageLabel.setText("Mur destructible détruit !");
+                    updateGridDisplay();
+                }
+            }
+            case EMPTY -> messageLabel.setText("Case vide");
+            case WALL -> messageLabel.setText("Mur indestructible");
+            case PLAYER -> messageLabel.setText("Le joueur est ici !");
+            case BONUS_RANGE -> messageLabel.setText("Bonus : +1 portée de bombe !");
+            case MALUS_RANGE -> messageLabel.setText("Malus : -1 portée de bombe !");
         }
     }
-    
-    private void handlePlaceBomb(int player) {
+
+    private void handlePlaceBomb() {
         if (gameController.isPaused()) return;
-        boolean canPlace = (player == 1) ? gameModel.canPlaceBomb1() : gameModel.canPlaceBomb2();
-        if (!canPlace) {
+        int row = gameModel.getPlayerRow();
+        int col = gameModel.getPlayerCol();
+        if (!gameModel.canPlaceBomb()) {
             messageLabel.setText("Nombre maximum de bombes atteint !");
             return;
         }
-        if (gameModel.placeBombForPlayer(player)) {
+        if (gameModel.placeBomb(row, col)) {
             updateGridDisplay();
-            int row = (player == 1) ? gameModel.getPlayer1Row() : gameModel.getPlayer2Row();
-            int col = (player == 1) ? gameModel.getPlayer1Col() : gameModel.getPlayer2Col();
             new Thread(() -> {
-                try {
-                    Thread.sleep(1500); // 1.5 seconde avant explosion
-                } catch (InterruptedException ignored) {}
-                javafx.application.Platform.runLater(() -> {
-                    explodeBomb(row, col, player);
-                });
+                try { Thread.sleep(1500); } catch (InterruptedException ignored) {}
+                javafx.application.Platform.runLater(() -> explodeBomb(row, col));
             }).start();
         }
     }
-    
-    private void explodeBomb(int row, int col, int player) {
-        int range = (player == 1) ? gameModel.getBombRange1() : gameModel.getBombRange2();
-        
-        boolean player1WasOnBomb = (gameModel.getPlayer1Row() == row && gameModel.getPlayer1Col() == col && gameModel.isBombUnderPlayer1());
-        boolean player2WasOnBomb = (gameModel.getPlayer2Row() == row && gameModel.getPlayer2Col() == col && gameModel.isBombUnderPlayer2());
-        
+
+    private void explodeBomb(int row, int col) {
+        int range = gameModel.getBombRange();
+        boolean playerWasOnBomb = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col && gameModel.isBombUnderPlayer());
         gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
-        
+
         int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} };
         for (int[] d : dirs) {
             for (int dist = 1; dist <= range; dist++) {
                 int r = row + d[0] * dist, c = col + d[1] * dist;
                 if (!gameModel.isValidPosition(r, c)) break;
                 GameModel.CellType t = gameModel.getCellType(r, c);
-                if (t == GameModel.CellType.WALL) {
-                    break;
-                } else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
+                if (t == GameModel.CellType.WALL) break;
+                else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                     break;
-                } else if (t == GameModel.CellType.BOMB1) {
-                    explodeBomb(r, c, 1);
+                } else if (t == GameModel.CellType.BOMB) {
+                    explodeBomb(r, c);
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                } else if (t == GameModel.CellType.BOMB2) {
-                    explodeBomb(r, c, 2);
+                } else if (t == GameModel.CellType.PLAYER) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                } else if (t == GameModel.CellType.PLAYER1) {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                    gameModel.killPlayer(1);
-                    messageLabel.setText("Joueur 2 a gagné !");
-                    pauseButton.setDisable(true);
-                    pauseTimer();
-                } else if (t == GameModel.CellType.PLAYER2) {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                    gameModel.killPlayer(2);
-                    messageLabel.setText("Joueur 1 a gagné !");
-                    pauseButton.setDisable(true);
-                    pauseTimer();
+                    endGame();
                 } else if (t == GameModel.CellType.BONUS_RANGE || t == GameModel.CellType.MALUS_RANGE) {
                     gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
                 } else {
@@ -252,19 +197,16 @@ public class GameViewController {
                 }
             }
         }
-        
+
         updateGridDisplay();
-        gameModel.bombExploded(player);
-        
-        // Nettoyage explosion après 400ms
+        gameModel.bombExploded();
+
         new Thread(() -> {
             try { Thread.sleep(400); } catch (InterruptedException ignored) {}
             javafx.application.Platform.runLater(() -> {
                 if (gameModel.getCellType(row, col) == GameModel.CellType.EXPLOSION) {
-                    if (player1WasOnBomb && gameModel.getPlayer1Row() == row && gameModel.getPlayer1Col() == col) {
-                        gameModel.setCellType(row, col, GameModel.CellType.PLAYER1);
-                    } else if (player2WasOnBomb && gameModel.getPlayer2Row() == row && gameModel.getPlayer2Col() == col) {
-                        gameModel.setCellType(row, col, GameModel.CellType.PLAYER2);
+                    if (playerWasOnBomb && gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col) {
+                        gameModel.setCellType(row, col, GameModel.CellType.PLAYER);
                     } else {
                         gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
                     }
@@ -273,10 +215,9 @@ public class GameViewController {
                 for (int[] d : dirs2) {
                     for (int dist = 1; dist <= range; dist++) {
                         int r = row + d[0] * dist, c = col + d[1] * dist;
-                        if (gameModel.isValidPosition(r, c)) {
-                            if (gameModel.getCellType(r, c) == GameModel.CellType.EXPLOSION) {
-                                gameModel.setCellType(r, c, GameModel.CellType.EMPTY);
-                            }
+                        if (gameModel.isValidPosition(r, c) &&
+                                gameModel.getCellType(r, c) == GameModel.CellType.EXPLOSION) {
+                            gameModel.setCellType(r, c, GameModel.CellType.EMPTY);
                         }
                     }
                 }
@@ -284,46 +225,69 @@ public class GameViewController {
             });
         }).start();
     }
-    
+
+    private void endGame() {
+        gameModel.setGameRunning(false);
+        gameModel.setGameStatus("Game Over !");
+        statusLabel.setText(gameModel.getGameStatus());
+        messageLabel.setText("Le joueur a été touché ! Appuyez sur Reset pour recommencer.");
+        updateGridDisplay();
+        if (aiTimeline != null) aiTimeline.stop();
+    }
+
     private void updateGridDisplay() {
         for (Node node : gameGrid.getChildren()) {
             if (node instanceof StackPane cell) {
                 Integer col = GridPane.getColumnIndex(node);
                 Integer row = GridPane.getRowIndex(node);
                 if (col == null || row == null) continue;
-                
-                cell.getStyleClass().removeAll(
-                        "cell-empty", "cell-wall", "cell-destructible", "cell-player1", "cell-player2", "cell-bomb1", "cell-bomb2",
-                        "cell-explosion", "cell-bonus-range", "cell-malus-range"
-                );
+
+                cell.getStyleClass().removeAll("cell-empty", "cell-wall", "cell-destructible", "cell-player", "cell-bomb", "cell-explosion", "cell-ai", "cell-bonus-range", "cell-malus-range");
                 cell.getChildren().clear();
-                
-                boolean hasPlayer1 = (gameModel.getPlayer1Row() == row && gameModel.getPlayer1Col() == col && gameModel.isPlayer1Alive());
-                boolean hasPlayer2 = (gameModel.getPlayer2Row() == row && gameModel.getPlayer2Col() == col && gameModel.isPlayer2Alive());
-                boolean hasBomb1 = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB1)
-                        || (hasPlayer1 && gameModel.isBombUnderPlayer1());
-                boolean hasBomb2 = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB2)
-                        || (hasPlayer2 && gameModel.isBombUnderPlayer2());
-                
-                // Affichage superposé
-                if (hasPlayer1 && hasBomb1) {
-                    cell.getStyleClass().addAll("cell-bomb1", "cell-player1");
-                    addPlayerImage(cell, 1);
-                } else if (hasPlayer2 && hasBomb2) {
-                    cell.getStyleClass().addAll("cell-bomb2", "cell-player2");
-                    addPlayerImage(cell, 2);
-                } else if (hasPlayer1) {
-                    cell.getStyleClass().add("cell-player1");
-                    addPlayerImage(cell, 1);
-                } else if (hasPlayer2) {
-                    cell.getStyleClass().add("cell-player2");
-                    addPlayerImage(cell, 2);
+
+                boolean hasPlayer = (gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col);
+                boolean hasBomb = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB);
+                boolean hasAI = (gameModel.getAIRow() == row && gameModel.getAICol() == col);
+
+                if (hasPlayer && hasBomb) {
+                    cell.getStyleClass().addAll("cell-bomb", "cell-player");
+                    try {
+                        String imagePath = getPlayerImagePath(gameModel.getPlayerDirection());
+                        Image playerImage = new Image(getClass().getResourceAsStream(imagePath));
+                        ImageView imageView = new ImageView(playerImage);
+                        imageView.setFitWidth(28);
+                        imageView.setFitHeight(28);
+                        cell.getChildren().add(imageView);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else if (hasPlayer) {
+                    cell.getStyleClass().add("cell-player");
+                    try {
+                        String imagePath = getPlayerImagePath(gameModel.getPlayerDirection());
+                        Image playerImage = new Image(getClass().getResourceAsStream(imagePath));
+                        ImageView imageView = new ImageView(playerImage);
+                        imageView.setFitWidth(28);
+                        imageView.setFitHeight(28);
+                        cell.getChildren().add(imageView);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else if (hasAI) {
+                    cell.getStyleClass().add("cell-ai");
+                    try {
+                        String imagePath = "/com/example/BomberMan/Personnages/Blanc/IA.png";
+                        Image aiImage = new Image(getClass().getResourceAsStream(imagePath));
+                        ImageView imageView = new ImageView(aiImage);
+                        imageView.setFitWidth(28);
+                        imageView.setFitHeight(28);
+                        cell.getChildren().add(imageView);
+                    } catch (Exception e) {}
                 } else {
                     switch (gameModel.getCellType(row, col)) {
                         case WALL -> cell.getStyleClass().add("cell-wall");
                         case DESTRUCTIBLE_WALL -> cell.getStyleClass().add("cell-destructible");
-                        case BOMB1 -> cell.getStyleClass().add("cell-bomb1");
-                        case BOMB2 -> cell.getStyleClass().add("cell-bomb2");
+                        case BOMB -> cell.getStyleClass().add("cell-bomb");
                         case EXPLOSION -> cell.getStyleClass().add("cell-explosion");
                         case BONUS_RANGE -> cell.getStyleClass().add("cell-bonus-range");
                         case MALUS_RANGE -> cell.getStyleClass().add("cell-malus-range");
@@ -335,36 +299,16 @@ public class GameViewController {
         scoreLabel.setText(String.valueOf(gameModel.getScore()));
         statusLabel.setText(gameModel.getGameStatus());
     }
-    
-    private void addPlayerImage(StackPane cell, int player) {
-        try {
-            String basePath = (player == 1)
-                    ? "/com/example/BomberMan/Personnages/Blanc/"
-                    : "/com/example/BomberMan/Personnages/Rouge/";
-            
-            GameModel.Direction dir = (player == 1)
-                    ? gameModel.getPlayer1Direction()
-                    : gameModel.getPlayer2Direction();
-            
-            String imageName;
-            switch (dir) {
-                case UP -> imageName = "Dos.png";
-                case DOWN -> imageName = "Face.png";
-                case LEFT -> imageName = "Gauche.png";
-                case RIGHT -> imageName = "Droite.png";
-                default -> imageName = "Face.png";
-            }
-            String imagePath = basePath + imageName;
-            Image playerImage = new Image(getClass().getResourceAsStream(imagePath));
-            ImageView imageView = new ImageView(playerImage);
-            imageView.setFitWidth(28);
-            imageView.setFitHeight(28);
-            cell.getChildren().add(imageView);
-        } catch (Exception e) {
-            e.printStackTrace(); // Pour voir l'erreur si jamais l'image n'est pas trouvée
-        }
+
+    private String getPlayerImagePath(GameModel.Direction direction) {
+        return switch (direction) {
+            case UP -> "/com/example/BomberMan/Personnages/Blanc/Dos.png";
+            case DOWN -> "/com/example/BomberMan/Personnages/Blanc/Face.png";
+            case LEFT -> "/com/example/BomberMan/Personnages/Blanc/Gauche.png";
+            case RIGHT -> "/com/example/BomberMan/Personnages/Blanc/Droite.png";
+        };
     }
-    
+
     @FXML
     private void handleStartGame() {
         gameController.startGame();
@@ -375,7 +319,7 @@ public class GameViewController {
         startButton.setDisable(true);
         pauseButton.setDisable(false);
     }
-    
+
     @FXML
     private void handlePauseGame() {
         gameController.pauseGame();
@@ -383,15 +327,17 @@ public class GameViewController {
         if (gameController.isPaused()) {
             messageLabel.setText("Jeu en pause");
             pauseTimer();
+            if (aiTimeline != null) aiTimeline.pause();
             pauseButton.setText("Reprendre");
         } else {
             messageLabel.setText("Jeu relancé !");
             resumeTimer();
+            if (aiTimeline != null) aiTimeline.play();
             pauseButton.setText("Pause");
         }
         gameGrid.requestFocus();
     }
-    
+
     @FXML
     private void handleResetGame() {
         gameController.resetGame();
@@ -403,8 +349,13 @@ public class GameViewController {
         pauseButton.setDisable(true);
         stopTimer();
         elapsedSeconds = 0;
+        if (aiTimeline != null) {
+            aiTimeline.stop();
+            aiTimeline = null;
+        }
+        if (vsIA) setupAITimeline();
     }
-    
+
     @FXML
     private void handleDebugGrid() {
         StringBuilder sb = new StringBuilder();
@@ -413,10 +364,8 @@ public class GameViewController {
                 switch (gameModel.getCellType(row, col)) {
                     case WALL -> sb.append("# ");
                     case DESTRUCTIBLE_WALL -> sb.append("D ");
-                    case PLAYER1 -> sb.append("1 ");
-                    case PLAYER2 -> sb.append("2 ");
-                    case BOMB1 -> sb.append("b ");
-                    case BOMB2 -> sb.append("x ");
+                    case PLAYER -> sb.append("P ");
+                    case BOMB -> sb.append("B ");
                     case EXPLOSION -> sb.append("X ");
                     case BONUS_RANGE -> sb.append("+ ");
                     case MALUS_RANGE -> sb.append("- ");

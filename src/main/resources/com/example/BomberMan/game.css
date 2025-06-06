@@ -159,7 +159,11 @@
     -fx-opacity: 0.7;
     -fx-cursor: default;
 }
-
+.cell-ai {
+    -fx-background-color: #00AC4B;
+    -fx-background-image: url("Personnages/Blanc/Dos.png"); /* à adapter */
+    -fx-background-size: cover;
+}
 .cell-bonus-range { -fx-background-color: #8f8; }
 .cell-malus-range { -fx-background-color: #f88; }
 

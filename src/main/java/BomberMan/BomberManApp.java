@@ -9,25 +9,53 @@ import javafx.stage.Stage;
 public class BomberManApp extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception {
-        // Afficher le menu au démarrage
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/MenuView.fxml"));
-        Parent root = loader.load();
-        Scene scene = new Scene(root, 600, 600);
-        primaryStage.setTitle("Super Bomberman");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+    public void start(Stage primaryStage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/FXML/MenuView.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root, 600, 600); // Taille fixe pour le menu
+            primaryStage.setTitle("Super Bomberman");
+            primaryStage.setScene(scene);
+            primaryStage.setResizable(false); // Optionnel : empêche le redimensionnement du menu
+            primaryStage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    // Cette méthode pourra être appelée depuis MenuController pour lancer le jeu
-    public void launchGame(Stage stage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/GameView.fxml"));
-        Parent root = loader.load();
-        Scene scene = new Scene(root);
-        scene.getStylesheets().add(getClass().getResource("/com/example/BomberMan/game.css").toExternalForm());
-        stage.setTitle("BomberMan - JavaFX");
-        stage.setScene(scene);
-        stage.show();
+    public void launchGame(Stage stage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/FXML/GameView.fxml"));
+            Parent root = loader.load();
+            Scene scene = new Scene(root); // Pas de taille fixe
+            scene.getStylesheets().add(getClass().getResource("/com/example/BomberMan/game.css").toExternalForm());
+            stage.setTitle("BomberMan - JavaFX");
+            stage.setScene(scene);
+            stage.setResizable(true); // Permet le redimensionnement si souhaité
+            stage.show();
+            stage.sizeToScene(); // Ajuste exactement à la taille du FXML
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void launchGameVsIA(Stage stage) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/FXML/GameView.fxml"));
+            Parent root = loader.load();
+            GameViewController controller = loader.getController();
+            controller.setVsIA(true);
+            controller.postInit();
+            Scene scene = new Scene(root); // Pas de taille fixe
+            scene.getStylesheets().add(getClass().getResource("/com/example/BomberMan/game.css").toExternalForm());
+            stage.setTitle("BomberMan - Mode Ordinateur");
+            stage.setScene(scene);
+            stage.setResizable(true); // Permet le redimensionnement si souhaité
+            stage.show();
+            stage.sizeToScene(); // Ajuste exactement à la taille du FXML
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
