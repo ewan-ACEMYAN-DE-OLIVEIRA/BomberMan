@@ -20,6 +20,10 @@ public class GameModel {
     private int playerRow;
     private int playerCol;
     
+    // Bombes
+    private int maxBombs = 2;
+    private int bombsPlaced = 0;
+    
     // Etat du jeu
     private boolean gameRunning = false;
     private int score = 0;
@@ -46,16 +50,14 @@ public class GameModel {
         grid[playerRow][playerCol] = CellType.PLAYER;
         // Ajoute des murs destructibles aléatoires (20% de la grille)
         addRandomDestructibleWalls(0.2);
+        bombsPlaced = 0;
     }
     
     private boolean isProtectedSpawnZone(int row, int col) {
-        // Coin haut gauche (spawn joueur 1)
+        // Coins pour éviter les murs devant spawn
         if ((row == 1 && col == 1) || (row == 1 && col == 2) || (row == 2 && col == 1)) return true;
-        // Coin haut droite (spawn joueur 2)
         if ((row == 1 && col == GRID_WIDTH - 2) || (row == 1 && col == GRID_WIDTH - 3) || (row == 2 && col == GRID_WIDTH - 2)) return true;
-        // Coin bas gauche (spawn joueur 3)
         if ((row == GRID_HEIGHT - 2 && col == 1) || (row == GRID_HEIGHT - 3 && col == 1) || (row == GRID_HEIGHT - 2 && col == 2)) return true;
-        // Coin bas droite (spawn joueur 4)
         if ((row == GRID_HEIGHT - 2 && col == GRID_WIDTH - 2) || (row == GRID_HEIGHT - 3 && col == GRID_WIDTH - 2) || (row == GRID_HEIGHT - 2 && col == GRID_WIDTH - 3)) return true;
         return false;
     }
@@ -68,7 +70,6 @@ public class GameModel {
         while (placed < max && tries < 1000) {
             int row = 1 + rand.nextInt(GRID_HEIGHT - 2);
             int col = 1 + rand.nextInt(GRID_WIDTH - 2);
-            // Ne pas placer sur les cases protégées
             if (grid[row][col] == CellType.EMPTY && !isProtectedSpawnZone(row, col)) {
                 grid[row][col] = CellType.DESTRUCTIBLE_WALL;
                 placed++;
@@ -109,6 +110,7 @@ public class GameModel {
     
     public boolean canMoveTo(int row, int col) {
         if (!isValidPosition(row, col)) return false;
+        // Le joueur NE PEUT PAS traverser une bombe
         return grid[row][col] == CellType.EMPTY;
     }
     
@@ -116,19 +118,11 @@ public class GameModel {
         int newRow = playerRow + dRow;
         int newCol = playerCol + dCol;
         if (!isValidPosition(newRow, newCol)) return false;
-        CellType destType = grid[newRow][newCol];
-        // Le joueur peut marcher sur une case vide ou une case bombe
-        if (destType == CellType.EMPTY || destType == CellType.BOMB) {
-            // Si l’ancienne case était une bombe, on la laisse, sinon on met à EMPTY
+        if (canMoveTo(newRow, newCol)) {
             if (grid[playerRow][playerCol] == CellType.PLAYER) {
                 grid[playerRow][playerCol] = CellType.EMPTY;
             }
-            // S’il y a déjà une bombe sur la nouvelle case, on ne l’efface pas :
-            if (grid[newRow][newCol] == CellType.BOMB) {
-                // On place le joueur par-dessus pour l’affichage (géré côté vue)
-            } else {
-                grid[newRow][newCol] = CellType.PLAYER;
-            }
+            grid[newRow][newCol] = CellType.PLAYER;
             playerRow = newRow;
             playerCol = newCol;
             return true;
@@ -136,13 +130,23 @@ public class GameModel {
         return false;
     }
     
-    // --- Bombe ---
+    // --- Bombes ---
+    public int getMaxBombs() { return maxBombs; }
+    public int getBombsPlaced() { return bombsPlaced; }
+    public boolean canPlaceBomb() { return bombsPlaced < maxBombs; }
+    
     public boolean placeBomb(int row, int col) {
-        if (isValidPosition(row, col) && (grid[row][col] == CellType.EMPTY || grid[row][col] == CellType.PLAYER)) {
+        // On ne peut poser une bombe que sur la case du joueur, et uniquement si pas déjà une bombe ici
+        if (isValidPosition(row, col) && grid[row][col] == CellType.PLAYER && canPlaceBomb()) {
             grid[row][col] = CellType.BOMB;
+            bombsPlaced++;
             return true;
         }
         return false;
+    }
+    
+    public void bombExploded() {
+        if (bombsPlaced > 0) bombsPlaced--;
     }
     
     // --- Etat du jeu ---
