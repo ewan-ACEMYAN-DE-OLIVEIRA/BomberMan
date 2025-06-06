@@ -162,3 +162,16 @@
 
 .cell-bonus-range { -fx-background-color: #8f8; }
 .cell-malus-range { -fx-background-color: #f88; }
+
+.cell-player1 { -fx-background-color: #00AC4B; }
+.cell-player2 { -fx-background-color: #00AC4B; }
+.cell-bomb1   { ;
+    -fx-background-image: url("bomb.png");
+    -fx-background-size: cover;
+    -fx-background-color: #00AC4B;}
+.cell-bomb2   {
+    -fx-background-image: url("bomb.png");
+    -fx-background-size: cover;
+    -fx-background-color: #00AC4B;}
+.cell-bonus-range { -fx-background-color: #8f8; }
+.cell-malus-range { -fx-background-color: #f88; }
