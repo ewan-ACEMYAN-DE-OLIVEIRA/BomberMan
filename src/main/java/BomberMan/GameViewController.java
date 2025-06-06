@@ -237,6 +237,8 @@ public class GameViewController {
         gameModel.setGameStatus("Game Over !");
         statusLabel.setText(gameModel.getGameStatus());
         messageLabel.setText("Le joueur a été touché ! Appuyez sur Reset pour recommencer.");
+        pauseTimer();
+        pauseButton.setDisable(true);
         updateGridDisplay();
         if (aiTimeline != null) aiTimeline.stop();
     }
@@ -347,6 +349,7 @@ public class GameViewController {
     @FXML
     private void handleResetGame() {
         gameController.resetGame();
+        gameModel.setPlayerDirection(GameModel.Direction.DOWN);
         updateGridDisplay();
         messageLabel.setText("Jeu réinitialisé !");
         gameGrid.requestFocus();
@@ -365,7 +368,7 @@ public class GameViewController {
     private void handleReturnToMenu() {
         try {
             // Charge le menu
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/MenuView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/FXML/MenuView.fxml"));
             Parent menuRoot = loader.load();
 
             // Remplace la scène actuelle par le menu
