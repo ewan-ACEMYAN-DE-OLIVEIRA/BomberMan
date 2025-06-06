@@ -16,7 +16,6 @@ public class BomberManApp extends Application {
             Scene scene = new Scene(root, 600, 600); // Taille fixe pour le menu
             primaryStage.setTitle("Super Bomberman");
             primaryStage.setScene(scene);
-            primaryStage.setResizable(false); // Optionnel : empêche le redimensionnement du menu
             primaryStage.show();
         } catch (Exception e) {
             e.printStackTrace();
