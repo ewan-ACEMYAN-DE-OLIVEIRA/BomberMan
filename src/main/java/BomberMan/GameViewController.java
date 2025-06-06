@@ -1,5 +1,7 @@
 package BomberMan;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -7,13 +9,26 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
+import javafx.util.Duration;
 
 public class GameViewController {
-    @FXML private GridPane gameGrid;
-    @FXML private Label scoreLabel;
-    @FXML private Label statusLabel;
-    @FXML private Label messageLabel;
-    
+    @FXML
+    private GridPane gameGrid;
+    @FXML
+    private Label scoreLabel;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private Label messageLabel;
+    @FXML
+    private Label timerLabel; // Ajouté pour le timer
+    @FXML
+    private Button startButton;
+    @FXML
+    private Button pauseButton;
+
+    private Timeline timer;
+    private int elapsedSeconds = 0;
     private GameModel gameModel;
     private GameController gameController;
     
@@ -26,6 +41,34 @@ public class GameViewController {
         setupKeyHandlers();
         statusLabel.setText(gameModel.getGameStatus());
         scoreLabel.setText("0");
+        pauseButton.setDisable(true);
+        javafx.application.Platform.runLater(() -> handleStartGame());
+    }
+
+    private void startTimer() {
+        if (timer != null) timer.stop();
+        elapsedSeconds = 0;
+        timerLabel.setText("Time: 00:00");
+        timer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            elapsedSeconds++;
+            int minutes = elapsedSeconds / 60;
+            int seconds = elapsedSeconds % 60;
+            timerLabel.setText(String.format("Time: %02d:%02d", minutes, seconds));
+        }));
+        timer.setCycleCount(Timeline.INDEFINITE);
+        timer.play();
+    }
+    private void pauseTimer() {
+        if (timer != null) timer.pause();
+    }
+
+    private void resumeTimer() {
+        if (timer != null) timer.play();
+    }
+
+    private void stopTimer() {
+        if (timer != null) timer.stop();
+        timerLabel.setText("Time: 00:00");
     }
     
     private void setupGridDisplay() {
@@ -197,22 +240,32 @@ public class GameViewController {
         scoreLabel.setText(String.valueOf(gameModel.getScore()));
         statusLabel.setText(gameModel.getGameStatus());
     }
-    
-    // Boutons UI
-    
+
     @FXML
     private void handleStartGame() {
         gameController.startGame();
         updateGridDisplay();
         messageLabel.setText("Partie démarrée !");
+        startTimer();
         gameGrid.requestFocus();
+        startButton.setDisable(true);
+        startButton.setDisable(true);
+        pauseButton.setDisable(false);;
     }
     
     @FXML
     private void handlePauseGame() {
         gameController.pauseGame();
         statusLabel.setText(gameModel.getGameStatus());
-        messageLabel.setText("Pause/Relance");
+        if (gameController.isPaused()) {
+            messageLabel.setText("Jeu en pause");
+            pauseTimer();
+            pauseButton.setText("Reprendre");
+        } else {
+            messageLabel.setText("Jeu relancé !");
+            resumeTimer();
+            pauseButton.setText("Pause");
+        }
         gameGrid.requestFocus();
     }
     
@@ -222,14 +275,10 @@ public class GameViewController {
         updateGridDisplay();
         messageLabel.setText("Jeu réinitialisé !");
         gameGrid.requestFocus();
-    }
-    
-    @FXML
-    private void handleAddWalls() {
-        gameController.addRandomDestructibleWalls(0.2);
-        updateGridDisplay();
-        messageLabel.setText("Murs destructibles ajoutés !");
-        gameGrid.requestFocus();
+        startButton.setDisable(false); // Réactive le bouton
+        pauseButton.setText("Pause");
+        pauseButton.setDisable(true); // Désactive le bouton Pause
+        timerLabel.setText("Time: 00:00");
     }
     
     @FXML
