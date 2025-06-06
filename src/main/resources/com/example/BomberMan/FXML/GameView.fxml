@@ -38,7 +38,6 @@
                 <Button fx:id="startButton" onAction="#handleStartGame" text="Démarrer" styleClass="game-btn"/>
                 <Button fx:id="pauseButton" onAction="#handlePauseGame" text="Pause" styleClass="game-btn"/>
                 <Button fx:id="resetButton" onAction="#handleResetGame" text="Reset" styleClass="game-btn"/>
-                <Button fx:id="debugButton" onAction="#handleDebugGrid" text="Debug Grille" styleClass="game-btn"/>
                 <Button fx:id="menuButton" text="Menu" onAction="#handleReturnToMenu" styleClass="game-btn"/>
             </HBox>
         </VBox>
