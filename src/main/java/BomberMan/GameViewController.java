@@ -327,7 +327,7 @@ public class GameViewController {
         }
         gameGrid.requestFocus();
     }
-    
+
     @FXML
     private void handleResetGame() {
         gameController.resetGame();
@@ -337,7 +337,8 @@ public class GameViewController {
         startButton.setDisable(false);
         pauseButton.setText("Pause");
         pauseButton.setDisable(true);
-        timerLabel.setText("Time: 00:00");
+        stopTimer();              // <-- stoppe le timer et remet le label à 0
+        elapsedSeconds = 0;       // <-- réinitialise le compteur (optionnel car déjà fait dans stopTimer)
     }
     
     @FXML
