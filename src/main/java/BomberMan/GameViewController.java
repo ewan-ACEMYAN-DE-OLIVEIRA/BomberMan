@@ -90,21 +90,54 @@ public class GameViewController {
             boolean moved = false;
             if (!gameModel.isGameRunning() || gameController.isPaused()) return;
             
-            // Joueur 1 : ZQSD + espace
-            if (event.getCode() == KeyCode.Z) moved = gameModel.movePlayer1(-1, 0);
-            if (event.getCode() == KeyCode.S) moved = gameModel.movePlayer1(1, 0);
-            if (event.getCode() == KeyCode.Q) moved = gameModel.movePlayer1(0, -1);
-            if (event.getCode() == KeyCode.D) moved = gameModel.movePlayer1(0, 1);
-            if (event.getCode() == KeyCode.SPACE) handlePlaceBomb(1);
-            
-            // Joueur 2 : IJKL + entrée
-            if (event.getCode() == KeyCode.I) moved = gameModel.movePlayer2(-1, 0);
-            if (event.getCode() == KeyCode.K) moved = gameModel.movePlayer2(1, 0);
-            if (event.getCode() == KeyCode.J) moved = gameModel.movePlayer2(0, -1);
-            if (event.getCode() == KeyCode.L) moved = gameModel.movePlayer2(0, 1);
-            if (event.getCode() == KeyCode.ENTER) handlePlaceBomb(2);
+            switch (event.getCode()) {
+                // Joueur 1
+                case Z -> {
+                    gameModel.setPlayer1Direction(GameModel.Direction.UP);
+                    moved = gameModel.movePlayer1(-1, 0);
+                }
+                case S -> {
+                    gameModel.setPlayer1Direction(GameModel.Direction.DOWN);
+                    moved = gameModel.movePlayer1(1, 0);
+                }
+                case Q -> {
+                    gameModel.setPlayer1Direction(GameModel.Direction.LEFT);
+                    moved = gameModel.movePlayer1(0, -1);
+                }
+                case D -> {
+                    gameModel.setPlayer1Direction(GameModel.Direction.RIGHT);
+                    moved = gameModel.movePlayer1(0, 1);
+                }
+                case SPACE -> handlePlaceBomb(1);
+                
+                // Joueur 2
+                case I -> {
+                    gameModel.setPlayer2Direction(GameModel.Direction.UP);
+                    moved = gameModel.movePlayer2(-1, 0);
+                }
+                case K -> {
+                    gameModel.setPlayer2Direction(GameModel.Direction.DOWN);
+                    moved = gameModel.movePlayer2(1, 0);
+                }
+                case J -> {
+                    gameModel.setPlayer2Direction(GameModel.Direction.LEFT);
+                    moved = gameModel.movePlayer2(0, -1);
+                }
+                case L -> {
+                    gameModel.setPlayer2Direction(GameModel.Direction.RIGHT);
+                    moved = gameModel.movePlayer2(0, 1);
+                }
+                case ENTER -> handlePlaceBomb(2);
+            }
             
             if (moved) updateGridDisplay();
+            gameGrid.requestFocus();
+            
+            // Toujours mettre à jour la vue si une touche directionnelle est appuyée
+            if (switch (event.getCode()) {
+                case Z, S, Q, D, I, K, J, L -> true;
+                default -> false;
+            }) updateGridDisplay();
         });
     }
     
@@ -279,15 +312,31 @@ public class GameViewController {
     
     private void addPlayerImage(StackPane cell, int player) {
         try {
-            String imagePath = (player == 1)
-                    ? "/com/example/BomberMan/Personnages/Blanc/Face.png"
-                    : "/com/example/BomberMan/Personnages/Rouge/Face.png";
+            String basePath = (player == 1)
+                    ? "/com/example/BomberMan/Personnages/Blanc/"
+                    : "/com/example/BomberMan/Personnages/Rouge/";
+            
+            GameModel.Direction dir = (player == 1)
+                    ? gameModel.getPlayer1Direction()
+                    : gameModel.getPlayer2Direction();
+            
+            String imageName;
+            switch (dir) {
+                case UP -> imageName = "Dos.png";
+                case DOWN -> imageName = "Face.png";
+                case LEFT -> imageName = "Gauche.png";
+                case RIGHT -> imageName = "Droite.png";
+                default -> imageName = "Face.png";
+            }
+            String imagePath = basePath + imageName;
             Image playerImage = new Image(getClass().getResourceAsStream(imagePath));
             ImageView imageView = new ImageView(playerImage);
             imageView.setFitWidth(28);
             imageView.setFitHeight(28);
             cell.getChildren().add(imageView);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace(); // Pour voir l'erreur si jamais l'image n'est pas trouvée
+        }
     }
     
     @FXML

@@ -16,6 +16,16 @@ public class GameModel {
         MALUS_RANGE
     }
     
+    public enum Direction { UP, DOWN, LEFT, RIGHT; }
+    
+    private Direction player1Direction = Direction.DOWN; // Par défaut vers le bas
+    private Direction player2Direction = Direction.DOWN; // Par défaut vers le bas
+    
+    public Direction getPlayer1Direction() { return player1Direction; }
+    public Direction getPlayer2Direction() { return player2Direction; }
+    public void setPlayer1Direction(Direction dir) { player1Direction = dir; }
+    public void setPlayer2Direction(Direction dir) { player2Direction = dir; }
+    
     private static final int GRID_WIDTH = 13;
     private static final int GRID_HEIGHT = 11;
     private final CellType[][] grid = new CellType[GRID_HEIGHT][GRID_WIDTH];
@@ -53,7 +63,7 @@ public class GameModel {
     public void resetGrid() {
         for (int row = 0; row < GRID_HEIGHT; row++) {
             for (int col = 0; col < GRID_WIDTH; col++) {
-                if (row == 0 || col == 0 || row == GRID_HEIGHT-1 || col == GRID_WIDTH-1 || (row % 2 == 0 && col % 2 == 0)) {
+                if (row == 0 || col == 0 || row == GRID_HEIGHT - 1 || col == GRID_WIDTH - 1 || (row % 2 == 0 && col % 2 == 0)) {
                     grid[row][col] = CellType.WALL;
                 } else {
                     grid[row][col] = CellType.EMPTY;
@@ -76,6 +86,8 @@ public class GameModel {
         bombRange2 = 1;
         bombUnderPlayer1 = false;
         bombUnderPlayer2 = false;
+        player1Direction = Direction.DOWN;
+        player2Direction = Direction.DOWN;
     }
     
     private boolean isProtectedSpawnZone(int row, int col) {
@@ -104,7 +116,7 @@ public class GameModel {
     
     public void addBonusAndMalus() {
         Random rand = new Random();
-        for(int i=0; i<3; i++) {
+        for (int i = 0; i < 3; i++) {
             int row, col;
             do {
                 row = 1 + rand.nextInt(GRID_HEIGHT - 2);
@@ -112,7 +124,7 @@ public class GameModel {
             } while (grid[row][col] != CellType.EMPTY || isProtectedSpawnZone(row, col));
             grid[row][col] = CellType.BONUS_RANGE;
         }
-        for(int i=0; i<3; i++) {
+        for (int i = 0; i < 3; i++) {
             int row, col;
             do {
                 row = 1 + rand.nextInt(GRID_HEIGHT - 2);
@@ -146,41 +158,69 @@ public class GameModel {
     public boolean isPlayer1Alive() { return player1Alive; }
     public boolean isPlayer2Alive() { return player2Alive; }
     
-    // Mouvement joueur 1
     public boolean movePlayer1(int dRow, int dCol) {
-        return movePlayerGeneric(1, dRow, dCol);
-    }
-    // Mouvement joueur 2
-    public boolean movePlayer2(int dRow, int dCol) {
-        return movePlayerGeneric(2, dRow, dCol);
-    }
-    private boolean movePlayerGeneric(int player, int dRow, int dCol) {
-        int curRow = (player == 1) ? player1Row : player2Row;
-        int curCol = (player == 1) ? player1Col : player2Col;
-        boolean bombUnderPlayer = (player == 1) ? bombUnderPlayer1 : bombUnderPlayer2;
-        int newRow = curRow + dRow, newCol = curCol + dCol;
+        if (dRow == -1) player1Direction = Direction.UP;
+        else if (dRow == 1) player1Direction = Direction.DOWN;
+        else if (dCol == -1) player1Direction = Direction.LEFT;
+        else if (dCol == 1) player1Direction = Direction.RIGHT;
+        
+        int curRow = player1Row;
+        int curCol = player1Col;
+        int newRow = curRow + dRow;
+        int newCol = curCol + dCol;
         if (!isValidPosition(newRow, newCol)) return false;
         CellType dest = grid[newRow][newCol];
+        
+        // Empêcher d'aller sur l'autre joueur
+        if (dest == CellType.PLAYER2) return false;
+        
         if (dest == CellType.EMPTY || dest == CellType.BONUS_RANGE || dest == CellType.MALUS_RANGE) {
-            // Bombe sous joueur
-            if (bombUnderPlayer) {
-                grid[curRow][curCol] = (player == 1 ? CellType.BOMB1 : CellType.BOMB2);
-                if (player == 1) bombUnderPlayer1 = false;
-                else bombUnderPlayer2 = false;
+            if (bombUnderPlayer1) {
+                grid[curRow][curCol] = CellType.BOMB1;
+                bombUnderPlayer1 = false;
             } else {
                 grid[curRow][curCol] = CellType.EMPTY;
             }
-            if (dest == CellType.BONUS_RANGE) {
-                if (player == 1) increaseBombRange1();
-                else increaseBombRange2();
+            if (dest == CellType.BONUS_RANGE) increaseBombRange1();
+            else if (dest == CellType.MALUS_RANGE) decreaseBombRange1();
+            
+            grid[newRow][newCol] = CellType.PLAYER1;
+            player1Row = newRow;
+            player1Col = newCol;
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean movePlayer2(int dRow, int dCol) {
+        if (dRow == -1) player2Direction = Direction.UP;
+        else if (dRow == 1) player2Direction = Direction.DOWN;
+        else if (dCol == -1) player2Direction = Direction.LEFT;
+        else if (dCol == 1) player2Direction = Direction.RIGHT;
+        
+        int curRow = player2Row;
+        int curCol = player2Col;
+        int newRow = curRow + dRow;
+        int newCol = curCol + dCol;
+        if (!isValidPosition(newRow, newCol)) return false;
+        CellType dest = grid[newRow][newCol];
+        
+        // Empêcher d'aller sur l'autre joueur
+        if (dest == CellType.PLAYER1) return false;
+        
+        if (dest == CellType.EMPTY || dest == CellType.BONUS_RANGE || dest == CellType.MALUS_RANGE) {
+            if (bombUnderPlayer2) {
+                grid[curRow][curCol] = CellType.BOMB2;
+                bombUnderPlayer2 = false;
+            } else {
+                grid[curRow][curCol] = CellType.EMPTY;
             }
-            if (dest == CellType.MALUS_RANGE) {
-                if (player == 1) decreaseBombRange1();
-                else decreaseBombRange2();
-            }
-            grid[newRow][newCol] = (player == 1 ? CellType.PLAYER1 : CellType.PLAYER2);
-            if (player == 1) { player1Row = newRow; player1Col = newCol; }
-            else { player2Row = newRow; player2Col = newCol; }
+            if (dest == CellType.BONUS_RANGE) increaseBombRange2();
+            else if (dest == CellType.MALUS_RANGE) decreaseBombRange2();
+            
+            grid[newRow][newCol] = CellType.PLAYER2;
+            player2Row = newRow;
+            player2Col = newCol;
             return true;
         }
         return false;
