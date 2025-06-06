@@ -9,7 +9,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
+import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 
 public class GameViewController {
     @FXML
@@ -26,6 +30,8 @@ public class GameViewController {
     private Button startButton;
     @FXML
     private Button pauseButton;
+    @FXML
+    private Button menuButton;
 
     private Timeline timer;
     private Timeline aiTimeline;
@@ -355,7 +361,22 @@ public class GameViewController {
         }
         if (vsIA) setupAITimeline();
     }
+    @FXML
+    private void handleReturnToMenu() {
+        try {
+            // Charge le menu
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/MenuView.fxml"));
+            Parent menuRoot = loader.load();
 
+            // Remplace la scène actuelle par le menu
+            Stage stage = (Stage) menuButton.getScene().getWindow();
+            Scene scene = new Scene(menuRoot, stage.getScene().getWidth(), stage.getScene().getHeight());
+            stage.setScene(scene);
+            stage.setTitle("Menu BomberMan");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     @FXML
     private void handleDebugGrid() {
         StringBuilder sb = new StringBuilder();
