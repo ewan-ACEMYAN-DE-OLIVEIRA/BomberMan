@@ -45,7 +45,16 @@ public class GameController {
         isPaused = false;
         gameModel.setGameStatus("Jeu arrêté");
     }
-    
+    public boolean destroyWall(int row, int col) {
+        // Ne pas détruire un mur si le joueur est dessus
+        if (gameModel.getCellType(row, col) == GameModel.CellType.DESTRUCTIBLE_WALL
+                && !(gameModel.getPlayerRow() == row && gameModel.getPlayerCol() == col)) {
+            gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
+            gameModel.setScore(gameModel.getScore() + 10);
+            return true;
+        }
+        return false;
+    }
     public void addRandomDestructibleWalls(double density) {
         gameModel.addRandomDestructibleWalls(density);
         gameModel.setGameStatus("Murs destructibles ajoutés !");
