@@ -15,7 +15,7 @@ public class PersonnalisationController {
         backButton.setOnAction(event -> {
             try {
                 Stage stage = (Stage) backButton.getScene().getWindow();
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/MenuView.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/FXML/MenuView.fxml"));
                 Parent root = loader.load();
                 Scene scene = new Scene(root, 600, 600);
                 stage.setScene(scene);
