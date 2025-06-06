@@ -90,7 +90,7 @@ public class GameViewController {
         gameGrid.setFocusTraversable(true);
         gameGrid.setOnKeyPressed(event -> {
             boolean moved = false;
-            if (!gameModel.isGameRunning()) return;
+            if (!gameModel.isGameRunning() || gameController.isPaused()) return;
             if (event.getCode() == KeyCode.Z) moved = gameModel.movePlayer(-1, 0); // haut
             if (event.getCode() == KeyCode.S) moved = gameModel.movePlayer(1, 0);  // bas
             if (event.getCode() == KeyCode.Q) moved = gameModel.movePlayer(0, -1); // gauche
@@ -118,6 +118,7 @@ public class GameViewController {
     }
     
     private void handlePlaceBomb() {
+        if (gameController.isPaused()) return;  // si jeu en pause impossible poser bombe
         int row = gameModel.getPlayerRow();
         int col = gameModel.getPlayerCol();
         if (!gameModel.canPlaceBomb()) {
@@ -267,6 +268,7 @@ public class GameViewController {
             pauseButton.setText("Pause");
         }
         gameGrid.requestFocus();
+
     }
     
     @FXML
