@@ -6,7 +6,6 @@ public class GameController {
 
     public GameController(GameModel gameModel) {
         this.gameModel = gameModel;
-        gameModel.setGameStatus("Contrôleur initialisé");
     }
 
     public void startGame() {
@@ -21,7 +20,10 @@ public class GameController {
     public void pauseGame() {
         if (gameModel.isGameRunning()) {
             isPaused = !isPaused;
-            gameModel.setGameStatus(isPaused ? "Jeu en pause" : "Jeu en cours");
+            if (isPaused)
+                gameModel.setGameStatus("Jeu en pause");
+            else
+                gameModel.setGameStatus("Jeu en cours");
         }
     }
 
