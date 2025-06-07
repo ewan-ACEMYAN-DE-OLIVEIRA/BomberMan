@@ -1,5 +1,6 @@
-package BomberMan;
+package BomberMan.controller;
 
+import BomberMan.application.BomberManApp;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
@@ -35,7 +36,7 @@ public class MenuController {
         }
     }
     private void openCustomisationView() {
-        changeScene("/com/example/BomberMan/FXML/PersonnalisationView.fxml", "Personnalisation", 600, 600, customButton);
+        changeScene("/FXML/PersonnalisationView.fxml", "Personnalisation", 600, 600, customButton);
     }
     private void changeScene(String fxmlPath, String title, int width, int height, Button sourceButton) {
         try {

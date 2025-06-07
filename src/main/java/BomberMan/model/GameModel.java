@@ -1,4 +1,4 @@
-package BomberMan;
+package BomberMan.model;
 
 import java.util.Random;
 

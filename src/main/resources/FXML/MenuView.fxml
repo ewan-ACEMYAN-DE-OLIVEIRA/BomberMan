@@ -5,7 +5,7 @@
 <?import javafx.scene.layout.*?>
 
 <VBox alignment="CENTER" spacing="30.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="BomberMan.MenuController" stylesheets="@../menu.css">
+      fx:controller="BomberMan.controller.MenuController" stylesheets="@../css/menu.css">
     <!-- Logo en haut si tu as un asset -->
     <ImageView fx:id="logoImage" fitHeight="120" fitWidth="380" />
     <!-- Sinon, un Label stylisé -->

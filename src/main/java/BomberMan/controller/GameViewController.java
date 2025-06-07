@@ -1,5 +1,6 @@
-package BomberMan;
+package BomberMan.controller;
 
+import BomberMan.model.GameModel;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
@@ -10,7 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.input.KeyCode;
 import javafx.scene.Node;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -104,7 +104,7 @@ public class GameViewController {
     @FXML
     private void handleReturnToMenu() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/BomberMan/FXML/MenuView.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/MenuView.fxml"));
             Parent menuRoot = loader.load();
             Stage stage = (Stage) menuButton.getScene().getWindow();
             Scene scene = new Scene(menuRoot, stage.getScene().getWidth(), stage.getScene().getHeight());
@@ -306,16 +306,16 @@ public class GameViewController {
                 // Affichage superposé
                 if (hasPlayer1 && hasBomb1) {
                     cell.getStyleClass().addAll("cell-bomb1", "cell-player1");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, "/Personnages/Blanc/Face.png");
                 } else if (hasPlayer2 && hasBomb2) {
                     cell.getStyleClass().addAll("cell-bomb2", "cell-player2");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, "/Personnages/Blanc/Face.png");
                 } else if (hasPlayer1) {
                     cell.getStyleClass().add("cell-player1");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, "/Personnages/Blanc/Face.png");
                 } else if (hasPlayer2) {
                     cell.getStyleClass().add("cell-player2");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, "/Personnages/Blanc/Face.png");
                 } else {
                     switch (gameModel.getCellType(row, col)) {
                         case WALL -> cell.getStyleClass().add("cell-wall");

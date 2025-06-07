@@ -12,5 +12,6 @@
     <Label fx:id="titleLabel" text="SUPER BOMBERMAN" styleClass="menu-title"/>
     <Button fx:id="playButton" text="NORMAL GAME" styleClass="menu-btn"/>
     <Button fx:id="battleButton" text="VS IA" styleClass="menu-btn"/>
+    <Button fx:id="customButton" text="PERSONNALISATION" styleClass="menu-btn"/>
     <Button fx:id="quitButton" text="QUIT" styleClass="menu-btn"/>
 </VBox>

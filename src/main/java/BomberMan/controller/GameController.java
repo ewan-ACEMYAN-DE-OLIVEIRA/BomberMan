@@ -1,4 +1,6 @@
-package BomberMan;
+package BomberMan.controller;
+
+import BomberMan.model.GameModel;
 
 public class GameController {
     private final GameModel gameModel;
