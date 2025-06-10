@@ -1,5 +1,8 @@
 package BomberMan.model;
 
+import BomberMan.CellType;
+import BomberMan.Direction;
+
 import java.util.Random;
 
 public class GameModel {

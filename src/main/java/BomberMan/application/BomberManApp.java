@@ -24,7 +24,7 @@ public class BomberManApp extends Application {
 
     public static void showMenu() {
         try {
-            FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/fxml/Menu.fxml"));
+            FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/FXML/Menu.fxml"));
             Scene scene = new Scene(loader.load());
             scene.getStylesheets().add(BomberManApp.class.getResource("/css/bomberman.css").toExternalForm());
             primaryStage.setScene(scene);
@@ -48,7 +48,7 @@ public class BomberManApp extends Application {
 
     public static void showPlaceholder(String message) {
         try {
-            FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/fxml/placeholder.fxml"));
+            FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/FXML/placeholder.fxml"));
             Scene scene = new Scene(loader.load());
             scene.getStylesheets().add(BomberManApp.class.getResource("/css/bomberman.css").toExternalForm());
             PlaceholderController controller = loader.getController();

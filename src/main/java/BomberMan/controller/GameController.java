@@ -50,7 +50,7 @@ public class GameController {
 
     // Personnalisation couleurs des joueurs
     private final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir"};
-    private final String[] COLOR_KEYS = {"blanc", "rouge", "bleu", "noir"};
+    private final String[] COLOR_KEYS = {"Blanc", "Rouge", "Bleu", "Noir"};
     private int indexJ1 = 0;
     private int indexJ2 = 1;
 
@@ -281,17 +281,17 @@ public class GameController {
     private Image getPlayerImage(String colorKey, Direction dir) {
         String suffix;
         switch (dir) {
-            case DOS:    suffix = "dos"; break;
-            case GAUCHE: suffix = "gauche"; break;
-            case DROITE: suffix = "droite"; break;
-            default:     suffix = "face"; break;
+            case DOS:    suffix = "Dos"; break;
+            case GAUCHE: suffix = "Gauche"; break;
+            case DROITE: suffix = "Droite"; break;
+            default:     suffix = "Face"; break;
         }
         // NE PAS METTRE /images/, les personnages sont dans ressources/personnages/...
-        String path = "/personnages/" + colorKey + "/" + suffix + ".png";
+        String path = "/Personnages/" + colorKey + "/" + suffix + ".png";
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
             System.err.println("Image non trouvée : " + path);
-            url = getClass().getResource("/personnages/blanc/face.png");
+            url = getClass().getResource("/Personnages/Blanc/face.png");
         }
         if (url == null) {
             System.err.println("Fallback impossible : image joueur manquante.");
