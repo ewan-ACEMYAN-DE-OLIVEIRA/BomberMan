@@ -34,8 +34,7 @@
     </center>
 
     <bottom>
-        <HBox fx:id="bottomBar" alignment="CENTER_RIGHT" style="-fx-background-color: #444; -fx-pref-height: 60;" spacing="10">
-            <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" style="-fx-font-size:18px"/>
+        <HBox fx:id="bottomBar" alignment="CENTER" style="-fx-background-color: #444; -fx-pref-height: 60;" spacing="10">
             <Button fx:id="btnPauseMusic" style="-fx-background-color: transparent;">
                 <graphic>
                     <ImageView fx:id="pauseIcon" fitWidth="36" fitHeight="36" />
@@ -46,7 +45,9 @@
                     <ImageView fx:id="nextIcon" fitWidth="36" fitHeight="36" />
                 </graphic>
             </Button>
-
+            <!-- ESPACEUR pour pousser le bouton à droite -->
+            <Region fx:id="spacer" HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" style="-fx-font-size:18px"/>
         </HBox>
     </bottom>
 </BorderPane>
