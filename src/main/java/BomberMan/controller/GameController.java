@@ -49,6 +49,9 @@ public class GameController {
     private Bomb[][] bombs = new Bomb[rows][cols];
     private boolean[][] isExplosion = new boolean[rows][cols];
 
+    private Image bonusImg;
+    private ImageView[][] cellBonuses = new ImageView[rows][cols];
+
     // Personnalisation couleurs des joueurs
     private final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir"};
     private final String[] COLOR_KEYS = {"Blanc", "Rouge", "Bleu", "Noir"};
@@ -126,7 +129,16 @@ public class GameController {
                 ImageView p2    = new ImageView(); p2.setFitWidth(cellSize); p2.setFitHeight(cellSize);
                 p2.setVisible(false); cellPlayer2[r][c] = p2;
 
-                cell.getChildren().addAll(bg, expl, bomb, p1, p2);
+                ImageView bonus = new ImageView();
+                bonus.setFitWidth(cellSize);
+                bonus.setFitHeight(cellSize);
+                bonus.setVisible(false);
+                cellBonuses[r][c] = bonus;
+
+                cell.getChildren().addAll(bg);
+                cell.getChildren().add(bonus);
+                cell.getChildren().addAll(expl, bomb, p1, p2);
+
                 gridPane.add(cell, c, r);
             }
         }
@@ -166,6 +178,7 @@ public class GameController {
         destructibleImg = loadAsset(folder, "destructible.png");
         bombImg         = loadAsset(folder, "bomb.png");
         explosionImg    = loadAsset(folder, "explosion.png");
+        bonusImg = loadAsset(folder, "bonus.png");
     }
 
     private Image loadAsset(String folder, String file) {
@@ -209,7 +222,16 @@ public class GameController {
 
         gridPane.requestFocus();
     }
-
+    private void updateBonusesDisplay() {
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++) {
+                cellBonuses[r][c].setVisible(false);
+                if (map[r][c].equals("bonus_range") || map[r][c].equals("malus_range")) {
+                    cellBonuses[r][c].setImage(bonusImg);
+                    cellBonuses[r][c].setVisible(true);
+                }
+            }
+    }
     private void generateRandomMap() {
         Random rand = new Random();
         int[][] joueurs = {{1, 1}, {rows - 2, cols - 2}};
@@ -244,7 +266,28 @@ public class GameController {
                 cellBackgrounds[r][c].setImage(img);
             }
     }
-
+    private void placeRandomBonuses(int nbBonus, int nbMalus) {
+        Random rand = new Random();
+        // Récupère toutes les coordonnées pelouse
+        List<int[]> pelouseCells = new ArrayList<>();
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                if (map[r][c].equals("pelouse")
+                        && (r != p1Row || c != p1Col) && (r != p2Row || c != p2Col)) {
+                    pelouseCells.add(new int[]{r, c});
+                }
+            }
+        }
+        Collections.shuffle(pelouseCells, rand);
+        for (int i = 0; i < nbBonus && i < pelouseCells.size(); i++) {
+            int[] pos = pelouseCells.get(i);
+            map[pos[0]][pos[1]] = "bonus_range";
+        }
+        for (int i = nbBonus; i < nbBonus + nbMalus && i < pelouseCells.size(); i++) {
+            int[] pos = pelouseCells.get(i);
+            map[pos[0]][pos[1]] = "malus_range";
+        }
+    }
     private void updateBombs() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -352,11 +395,21 @@ public class GameController {
         if (bomb2 && p2Alive) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
         }
+        if (p1Alive && map[p1Row][p1Col].equals("bonus_range")) {
+            p1ExplosionRadius = Math.min(p1ExplosionRadius + 1, 10); // Limite max portée
+            map[p1Row][p1Col] = "pelouse";
+            updateBonusesDisplay();
+        }
+        if (p2Alive && map[p2Row][p2Col].equals("bonus_range")) {
+            p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
+            map[p2Row][p2Col] = "pelouse";
+            updateBonusesDisplay();
+        }
     }
 
     private boolean isWalkable(int row, int col, int playerNum) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
-        if (!map[row][col].equals("pelouse")) return false;
+        if (!(map[row][col].equals("pelouse") || map[row][col].equals("bonus_range") || map[row][col].equals("malus_range"))) return false;
         if (bombs[row][col] != null) return false;
         if (playerNum == 1 && row == p2Row && col == p2Col) return false;
         if (playerNum == 2 && row == p1Row && col == p1Col) return false;
@@ -407,7 +460,15 @@ public class GameController {
             if (p1Alive && r == p1Row && c == p1Col) p1Killed.set(true);
             if (p2Alive && r == p2Row && c == p2Col) p2Killed.set(true);
             if (map[r][c].equals("destructible")) {
-                map[r][c] = "pelouse";
+                // Apparition aléatoire d’un bonus ou malus (par exemple 15% bonus, 10% malus, 75% rien)
+                double rand = Math.random();
+                if (rand < 0.15) {
+                    map[r][c] = "bonus_range";
+                } else if (rand < 0.25) {
+                    map[r][c] = "malus_range";
+                } else {
+                    map[r][c] = "pelouse";
+                }
             }
             if (bombs[r][c] != null) explodeBomb(r, c);
         }
@@ -443,6 +504,8 @@ public class GameController {
                 isExplosion[r][c] = false;
             }
         generateRandomMap();
+        placeRandomBonuses(3, 3);
+        updateBonusesDisplay();
         updateBombs();
         updateExplosions();
         updatePlayersDisplay();
