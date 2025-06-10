@@ -13,25 +13,8 @@ public class GameModel {
         return aiCol;
     }
 
-    public enum CellType {
-        EMPTY,
-        WALL,
-        DESTRUCTIBLE_WALL,
-        PLAYER1,
-        PLAYER2,
-        BOMB1,
-        BOMB2,
-        EXPLOSION,
-        BONUS_RANGE,
-        MALUS_RANGE,
-        AI
-    }
-    public enum Direction {
-        UP,
-        DOWN,
-        LEFT,
-        RIGHT
-    }
+
+
     private Direction player1Direction = Direction.DOWN;
     private Direction player2Direction = Direction.DOWN;
 

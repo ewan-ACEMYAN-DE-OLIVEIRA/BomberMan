@@ -204,41 +204,41 @@ public class GameViewController {
         boolean player1WasOnBomb = (gameModel.getPlayer1Row() == row && gameModel.getPlayer1Col() == col && gameModel.isBombUnderPlayer1());
         boolean player2WasOnBomb = (gameModel.getPlayer2Row() == row && gameModel.getPlayer2Col() == col && gameModel.isBombUnderPlayer2());
 
-        gameModel.setCellType(row, col, GameModel.CellType.EXPLOSION);
+        gameModel.setCellType(row, col, CellType.EXPLOSION);
 
         int[][] dirs = { {-1,0}, {1,0}, {0,-1}, {0,1} };
         for (int[] d : dirs) {
             for (int dist = 1; dist <= range; dist++) {
                 int r = row + d[0] * dist, c = col + d[1] * dist;
                 if (!gameModel.isValidPosition(r, c)) break;
-                GameModel.CellType t = gameModel.getCellType(r, c);
-                if (t == GameModel.CellType.WALL) {
+                CellType t = gameModel.getCellType(r, c);
+                if (t == CellType.WALL) {
                     break;
-                } else if (t == GameModel.CellType.DESTRUCTIBLE_WALL) {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                } else if (t == CellType.DESTRUCTIBLE_WALL) {
+                    gameModel.setCellType(r, c, CellType.EXPLOSION);
                     break;
-                } else if (t == GameModel.CellType.BOMB1) {
+                } else if (t == CellType.BOMB1) {
                     explodeBomb(r, c, 1);
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                } else if (t == GameModel.CellType.BOMB2) {
+                    gameModel.setCellType(r, c, CellType.EXPLOSION);
+                } else if (t == CellType.BOMB2) {
                     explodeBomb(r, c, 2);
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
-                } else if (t == GameModel.CellType.PLAYER1) {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                    gameModel.setCellType(r, c, CellType.EXPLOSION);
+                } else if (t == CellType.PLAYER1) {
+                    gameModel.setCellType(r, c, CellType.EXPLOSION);
                     gameModel.killPlayer(1);
                     messageLabel.setText("Joueur 2 a gagné !");
                     pauseButton.setDisable(true);
                     pauseTimer();
-                } else if (t == GameModel.CellType.PLAYER2) {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                } else if (t == CellType.PLAYER2) {
+                    gameModel.setCellType(r, c, CellType.EXPLOSION);
                     gameModel.killPlayer(2);
                     messageLabel.setText("Joueur 1 a gagné !");
                     pauseButton.setDisable(true);
                     pauseTimer();
-                } else if (t == GameModel.CellType.BONUS_RANGE || t == GameModel.CellType.MALUS_RANGE) {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                } else if (t == CellType.BONUS_RANGE || t == CellType.MALUS_RANGE) {
+                    gameModel.setCellType(r, c, CellType.EXPLOSION);
                 } else {
-                    gameModel.setCellType(r, c, GameModel.CellType.EXPLOSION);
+                    gameModel.setCellType(r, c, CellType.EXPLOSION);
                 }
             }
         }
@@ -249,13 +249,13 @@ public class GameViewController {
         new Thread(() -> {
             try { Thread.sleep(400); } catch (InterruptedException ignored) {}
             javafx.application.Platform.runLater(() -> {
-                if (gameModel.getCellType(row, col) == GameModel.CellType.EXPLOSION) {
+                if (gameModel.getCellType(row, col) == CellType.EXPLOSION) {
                     if (player1WasOnBomb && gameModel.getPlayer1Row() == row && gameModel.getPlayer1Col() == col) {
-                        gameModel.setCellType(row, col, GameModel.CellType.PLAYER1);
+                        gameModel.setCellType(row, col, CellType.PLAYER1);
                     } else if (player2WasOnBomb && gameModel.getPlayer2Row() == row && gameModel.getPlayer2Col() == col) {
-                        gameModel.setCellType(row, col, GameModel.CellType.PLAYER2);
+                        gameModel.setCellType(row, col, CellType.PLAYER2);
                     } else {
-                        gameModel.setCellType(row, col, GameModel.CellType.EMPTY);
+                        gameModel.setCellType(row, col, CellType.EMPTY);
                     }
                 }
                 int[][] dirs2 = { {-1,0}, {1,0}, {0,-1}, {0,1} };
@@ -263,8 +263,8 @@ public class GameViewController {
                     for (int dist = 1; dist <= range; dist++) {
                         int r = row + d[0] * dist, c = col + d[1] * dist;
                         if (gameModel.isValidPosition(r, c)) {
-                            if (gameModel.getCellType(r, c) == GameModel.CellType.EXPLOSION) {
-                                gameModel.setCellType(r, c, GameModel.CellType.EMPTY);
+                            if (gameModel.getCellType(r, c) == CellType.EXPLOSION) {
+                                gameModel.setCellType(r, c, CellType.EMPTY);
                             }
                         }
                     }
@@ -298,9 +298,9 @@ public class GameViewController {
 
                 boolean hasPlayer1 = (gameModel.getPlayer1Row() == row && gameModel.getPlayer1Col() == col && gameModel.isPlayer1Alive());
                 boolean hasPlayer2 = (gameModel.getPlayer2Row() == row && gameModel.getPlayer2Col() == col && gameModel.isPlayer2Alive());
-                boolean hasBomb1 = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB1)
+                boolean hasBomb1 = (gameModel.getCellType(row, col) == CellType.BOMB1)
                         || (hasPlayer1 && gameModel.isBombUnderPlayer1());
-                boolean hasBomb2 = (gameModel.getCellType(row, col) == GameModel.CellType.BOMB2)
+                boolean hasBomb2 = (gameModel.getCellType(row, col) == CellType.BOMB2)
                         || (hasPlayer2 && gameModel.isBombUnderPlayer2());
 
                 // Affichage superposé
