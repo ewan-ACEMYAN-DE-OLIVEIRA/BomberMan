@@ -12,10 +12,14 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
 import javafx.geometry.Pos;
 import javafx.util.Duration;
+
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import BomberMan.Direction;
@@ -88,7 +92,34 @@ public class GameController {
 
     private Scene gameScene; // pour revenir à la scène de jeu d'origine
     
-
+    @FXML
+    private Button btnPauseMusic;
+    @FXML
+    private Button btnNextMusic;
+    @FXML
+    private ImageView pauseIcon;
+    @FXML
+    private ImageView nextIcon;
+    
+    private List<String> musicFiles = Arrays.asList(
+            "/Musique/background1.mp3",
+            "/Musique/background2.mp3",
+            "/Musique/background3.mp3",
+            "/Musique/background4.mp3",
+            "/Musique/background5.mp3",
+            "/Musique/background6.mp3",
+            "/Musique/background7.mp3",
+            "/Musique/background8.mp3",
+            "/Musique/background9.mp3",
+            "/Musique/background10.mp3",
+            "/Musique/background11.mp3",
+            "/Musique/background12.mp3"
+            // Ajoute les chemins de tes musiques ici
+    );
+    private int currentMusicIndex = 0;
+    private MediaPlayer mediaPlayer;
+    private boolean isMusicPaused = false;
+    
     private static class Bomb {
         int row, col;
         int owner;
@@ -157,6 +188,30 @@ public class GameController {
         if (btnPerso != null) {
             btnPerso.setOnAction(e -> openPersonnalisationPage());
         }
+        if (pauseIcon != null) {
+            pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+        }
+        if (nextIcon != null) {
+            nextIcon.setImage(new Image(getClass().getResource("/images/pass.png").toExternalForm()));
+        }
+        if (btnNextMusic != null) {
+            btnNextMusic.setOnAction(e -> playNextMusic());
+        }
+        if (btnPauseMusic != null) {
+            btnPauseMusic.setOnAction(e -> {
+                if (mediaPlayer == null) return;
+                if (isMusicPaused) {
+                    mediaPlayer.play();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+                    isMusicPaused = false;
+                } else {
+                    mediaPlayer.pause();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/play.png").toExternalForm()));
+                    isMusicPaused = true;
+                }
+            });
+        }
+        playMusic(currentMusicIndex);
     }
 
     private void loadThemeAssets() {
@@ -181,7 +236,32 @@ public class GameController {
         }
         return new Image(url.toString());
     }
-
+    
+    private void playMusic(int index) {
+        try {
+            if (mediaPlayer != null) mediaPlayer.stop();
+            String musicFile = musicFiles.get(index);
+            java.net.URL url = getClass().getResource(musicFile);
+            if (url == null) {
+                System.err.println("Musique introuvable : " + musicFile);
+                return;
+            }
+            Media media = new Media(url.toExternalForm());
+            mediaPlayer = new MediaPlayer(media);
+            mediaPlayer.setOnEndOfMedia(this::playNextMusic);
+            mediaPlayer.play();
+            isMusicPaused = false; // ← On remet l'état à "en lecture"
+            if (pauseIcon != null)
+                pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la lecture de la musique : " + e.getMessage());
+        }
+    }
+    
+    private void playNextMusic() {
+        currentMusicIndex = (currentMusicIndex + 1) % musicFiles.size();
+        playMusic(currentMusicIndex);
+    }
     public void initGame(boolean is1v1) {
         scoreP1 = 0;
         scoreP2 = 0;
