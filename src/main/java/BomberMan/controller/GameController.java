@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 import javafx.stage.Modality;
 import javafx.geometry.Pos;
 import javafx.util.Duration;
+import javafx.scene.media.AudioClip;
 
 import java.net.URL;
 import java.util.*;
@@ -58,8 +59,7 @@ public class GameController {
     private ImageView[][] cellBonuses = new ImageView[rows][cols];
 
     // Personnalisation couleurs des joueurs
-    private final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir"};
-    private final String[] COLOR_KEYS = {"Blanc", "Rouge", "Bleu", "Noir"};
+    private final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
     private int indexJ1 = 0;
     private int indexJ2 = 1;
 
@@ -74,6 +74,9 @@ public class GameController {
     private ImageView[][] cellBombs       = new ImageView[rows][cols];
     private ImageView[][] cellPlayer1     = new ImageView[rows][cols];
     private ImageView[][] cellPlayer2     = new ImageView[rows][cols];
+
+    //son bonus
+    private AudioClip bonusSound;
 
     private int p1Row = 1, p1Col = 1;
     private Direction p1Dir = Direction.DOWN;
@@ -142,8 +145,8 @@ public class GameController {
         loadThemeAssets();
         setupGridPaneResize();
 
-        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.DOWN));
-        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.DOWN));
+        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
+        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
 
         gridPane.getChildren().clear();
         for (int r = 0; r < rows; r++) {
@@ -197,6 +200,11 @@ public class GameController {
 
         timerTimeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateTimer()));
         timerTimeline.setCycleCount(Timeline.INDEFINITE);
+
+        URL bonusSoundUrl = getClass().getResource("/Son/Bonus.mp3");
+        if (bonusSoundUrl != null) {
+            bonusSound = new AudioClip(bonusSoundUrl.toExternalForm());
+        }
 
         gridPane.setFocusTraversable(true);
         gridPane.requestFocus();
@@ -435,11 +443,11 @@ public class GameController {
                 cellPlayer2[r][c].setVisible(false);
             }
         if (p1Alive && !map[p1Row][p1Col].equals("wall") && !map[p1Row][p1Col].equals("destructible")) {
-            cellPlayer1[p1Row][p1Col].setImage(getPlayerImage(COLOR_KEYS[indexJ1], p1Dir));
+            cellPlayer1[p1Row][p1Col].setImage(getPlayerImage(COLORS[indexJ1], p1Dir));
             cellPlayer1[p1Row][p1Col].setVisible(true);
         }
         if (p2Alive && !map[p2Row][p2Col].equals("wall") && !map[p2Row][p2Col].equals("destructible")) {
-            cellPlayer2[p2Row][p2Col].setImage(getPlayerImage(COLOR_KEYS[indexJ2], p2Dir));
+            cellPlayer2[p2Row][p2Col].setImage(getPlayerImage(COLORS[indexJ2], p2Dir));
             cellPlayer2[p2Row][p2Col].setVisible(true);
         }
     }
@@ -503,10 +511,12 @@ public class GameController {
             if (isWalkable(newRow1, newCol1, 1)) {
                 p1Row = newRow1;
                 p1Col = newCol1;
-                if (map[p1Row][p1Col].equals("bonus_range"))
+                if (map[p1Row][p1Col].equals("bonus_range")) {
                     p1ExplosionRadius = Math.min(p1ExplosionRadius + 1, 10);
-                else if (map[p1Row][p1Col].equals("malus_range"))
+                    if (bonusSound != null) bonusSound.play();
+                } else if (map[p1Row][p1Col].equals("malus_range")) {
                     p1ExplosionRadius = Math.max(p1ExplosionRadius - 1, 1);
+                }
                 if (map[p1Row][p1Col].equals("bonus_range") || map[p1Row][p1Col].equals("malus_range")) {
                     map[p1Row][p1Col] = "pelouse";
                     updateBonusesDisplay();
@@ -553,10 +563,12 @@ public class GameController {
             if (isWalkable(newRow2, newCol2, 2)) {
                 p2Row = newRow2;
                 p2Col = newCol2;
-                if (map[p2Row][p2Col].equals("bonus_range"))
+                if (map[p2Row][p2Col].equals("bonus_range")) {
                     p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
-                else if (map[p2Row][p2Col].equals("malus_range"))
+                    if (bonusSound != null) bonusSound.play();
+                } else if (map[p2Row][p2Col].equals("malus_range")) {
                     p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+                }
                 if (map[p2Row][p2Col].equals("bonus_range") || map[p2Row][p2Col].equals("malus_range")) {
                     map[p2Row][p2Col] = "pelouse";
                     updateBonusesDisplay();
@@ -695,9 +707,9 @@ public class GameController {
 
         ImageView winnerImg;
         if (player == 1) {
-            winnerImg = new ImageView(getPlayerImage(COLOR_KEYS[indexJ1], Direction.DOWN));
+            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
         } else {
-            winnerImg = new ImageView(getPlayerImage(COLOR_KEYS[indexJ2], Direction.DOWN));
+            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
         }
         winnerImg.setFitHeight(80); winnerImg.setFitWidth(80);
 
@@ -742,17 +754,17 @@ public class GameController {
         rightJ1.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
         Label couleurJ1Label = new Label(COLORS[tempIndexJ1[0]]);
         couleurJ1Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        ImageView imageJ1 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.DOWN));
+        ImageView imageJ1 = new ImageView(getPlayerImage(COLORS[tempIndexJ1[0]], Direction.DOWN));
         imageJ1.setFitWidth(52); imageJ1.setFitHeight(52); imageJ1.setPreserveRatio(true);
         leftJ1.setOnAction(e -> {
             tempIndexJ1[0] = (tempIndexJ1[0] - 1 + COLORS.length) % COLORS.length;
             couleurJ1Label.setText(COLORS[tempIndexJ1[0]]);
-            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.DOWN));
+            imageJ1.setImage(getPlayerImage(COLORS[tempIndexJ1[0]], Direction.DOWN));
         });
         rightJ1.setOnAction(e -> {
             tempIndexJ1[0] = (tempIndexJ1[0] + 1) % COLORS.length;
             couleurJ1Label.setText(COLORS[tempIndexJ1[0]]);
-            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.DOWN));
+            imageJ1.setImage(getPlayerImage(COLORS[tempIndexJ1[0]], Direction.DOWN));
         });
         ligneJ1.getChildren().addAll(joueur1Label, leftJ1, couleurJ1Label, rightJ1, imageJ1);
 
@@ -766,17 +778,17 @@ public class GameController {
         rightJ2.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
         Label couleurJ2Label = new Label(COLORS[tempIndexJ2[0]]);
         couleurJ2Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        ImageView imageJ2 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.DOWN));
+        ImageView imageJ2 = new ImageView(getPlayerImage(COLORS[tempIndexJ2[0]], Direction.DOWN));
         imageJ2.setFitWidth(52); imageJ2.setFitHeight(52); imageJ2.setPreserveRatio(true);
         leftJ2.setOnAction(e -> {
             tempIndexJ2[0] = (tempIndexJ2[0] - 1 + COLORS.length) % COLORS.length;
             couleurJ2Label.setText(COLORS[tempIndexJ2[0]]);
-            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.DOWN));
+            imageJ2.setImage(getPlayerImage(COLORS[tempIndexJ2[0]], Direction.DOWN));
         });
         rightJ2.setOnAction(e -> {
             tempIndexJ2[0] = (tempIndexJ2[0] + 1) % COLORS.length;
             couleurJ2Label.setText(COLORS[tempIndexJ2[0]]);
-            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.DOWN));
+            imageJ2.setImage(getPlayerImage(COLORS[tempIndexJ2[0]], Direction.DOWN));
         });
         ligneJ2.getChildren().addAll(joueur2Label, leftJ2, couleurJ2Label, rightJ2, imageJ2);
 
@@ -815,8 +827,8 @@ public class GameController {
             loadThemeAssets();
             drawBoard();
             updatePlayersDisplay();
-            if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.DOWN));
-            if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.DOWN));
+            if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
+            if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
             if (gameScene != null) {
                 stage.setScene(gameScene);
             }

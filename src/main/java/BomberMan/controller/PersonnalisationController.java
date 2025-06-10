@@ -13,8 +13,8 @@ import javafx.stage.Stage;
 public class PersonnalisationController {
 
     // Les couleurs disponibles
-    private static final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir"};
-    private static final String[] COLOR_KEYS = {"blanc", "rouge", "bleu", "noir"};
+    private static final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
+
 
     // Indices sélectionnés pour chaque joueur
     private int indexJ1 = 0;
@@ -62,7 +62,7 @@ public class PersonnalisationController {
         couleurJ1Label = new Label(COLORS[indexJ1]);
         couleurJ1Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
 
-        imageJ1 = new ImageView(getImagePath(COLOR_KEYS[indexJ1]));
+        imageJ1 = new ImageView(getImagePath(COLORS[indexJ1]));
         imageJ1.setFitWidth(52);
         imageJ1.setFitHeight(52);
         imageJ1.setPreserveRatio(true);
@@ -93,7 +93,7 @@ public class PersonnalisationController {
         couleurJ2Label = new Label(COLORS[indexJ2]);
         couleurJ2Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
 
-        imageJ2 = new ImageView(getImagePath(COLOR_KEYS[indexJ2]));
+        imageJ2 = new ImageView(getImagePath(COLORS[indexJ2]));
         imageJ2.setFitWidth(52);
         imageJ2.setFitHeight(52);
         imageJ2.setPreserveRatio(true);
@@ -117,12 +117,12 @@ public class PersonnalisationController {
 
     private void updateJ1() {
         couleurJ1Label.setText(COLORS[indexJ1]);
-        imageJ1.setImage(new Image(getImagePath(COLOR_KEYS[indexJ1])));
+        imageJ1.setImage(new Image(getImagePath(COLORS[indexJ1])));
     }
 
     private void updateJ2() {
         couleurJ2Label.setText(COLORS[indexJ2]);
-        imageJ2.setImage(new Image(getImagePath(COLOR_KEYS[indexJ2])));
+        imageJ2.setImage(new Image(getImagePath(COLORS[indexJ2])));
     }
 
     private String getImagePath(String colorKey) {
