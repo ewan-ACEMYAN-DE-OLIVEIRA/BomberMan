@@ -306,16 +306,16 @@ public class GameViewController {
                 // Affichage superposé
                 if (hasPlayer1 && hasBomb1) {
                     cell.getStyleClass().addAll("cell-bomb1", "cell-player1");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, 1);
                 } else if (hasPlayer2 && hasBomb2) {
                     cell.getStyleClass().addAll("cell-bomb2", "cell-player2");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, 2);
                 } else if (hasPlayer1) {
                     cell.getStyleClass().add("cell-player1");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, 1);
                 } else if (hasPlayer2) {
                     cell.getStyleClass().add("cell-player2");
-                    addPlayerImage(cell, "/com/example/BomberMan/Personnages/Blanc/Face.png");
+                    addPlayerImage(cell, 2);
                 } else {
                     switch (gameModel.getCellType(row, col)) {
                         case WALL -> cell.getStyleClass().add("cell-wall");
@@ -333,8 +333,11 @@ public class GameViewController {
         scoreLabel.setText(String.valueOf(gameModel.getScore()));
         statusLabel.setText(gameModel.getGameStatus());
     }
-
-    private void addPlayerImage(StackPane cell, String imgPath) {
+    
+    private void addPlayerImage(StackPane cell, int player) {
+        String imgPath = (player == 1)
+                ? "/com/example/BomberMan/Personnages/Blanc/Face.png"
+                : "/com/example/BomberMan/Personnages/Rouge/Face.png";
         URL imgUrl = getClass().getResource(imgPath);
         if (imgUrl == null) {
             System.out.println("Ressource image non trouvée : " + imgPath);
