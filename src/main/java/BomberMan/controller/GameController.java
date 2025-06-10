@@ -18,6 +18,7 @@ import javafx.geometry.Pos;
 import javafx.util.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import BomberMan.Direction;
 
 public class GameController {
     @FXML
@@ -67,14 +68,14 @@ public class GameController {
     private ImageView[][] cellPlayer2     = new ImageView[rows][cols];
 
     private int p1Row = 1, p1Col = 1;
-    private Direction p1Dir = Direction.FACE;
+    private Direction p1Dir = Direction.DOWN;
     private int p1BombCount = 0;
     private int p1ExplosionRadius = 1;
     private int scoreP1 = 0;
     private boolean p1Alive = true;
 
     private int p2Row = rows - 2, p2Col = cols - 2;
-    private Direction p2Dir = Direction.FACE;
+    private Direction p2Dir = Direction.DOWN;
     private int p2BombCount = 0;
     private int p2ExplosionRadius = 1;
     private int scoreP2 = 0;
@@ -86,8 +87,7 @@ public class GameController {
     private boolean gameEnded = false;
 
     private Scene gameScene; // pour revenir à la scène de jeu d'origine
-
-    private enum Direction { FACE, DOS, GAUCHE, DROITE }
+    
 
     private static class Bomb {
         int row, col;
@@ -102,8 +102,8 @@ public class GameController {
     public void initialize() {
         loadThemeAssets();
 
-        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
-        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
+        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.DOWN));
+        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.DOWN));
 
         gridPane.getChildren().clear();
         for (int r = 0; r < rows; r++) {
@@ -186,8 +186,8 @@ public class GameController {
         scoreP1 = 0;
         scoreP2 = 0;
         gameEnded = false;
-        p1Row = 1; p1Col = 1; p1Dir = Direction.FACE; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
-        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.FACE; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
+        p1Row = 1; p1Col = 1; p1Dir = Direction.DOWN; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
+        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.DOWN; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
 
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -281,9 +281,9 @@ public class GameController {
     private Image getPlayerImage(String colorKey, Direction dir) {
         String suffix;
         switch (dir) {
-            case DOS:    suffix = "Dos"; break;
-            case GAUCHE: suffix = "Gauche"; break;
-            case DROITE: suffix = "Droite"; break;
+            case UP:    suffix = "Dos"; break;
+            case LEFT: suffix = "Gauche"; break;
+            case RIGHT: suffix = "Droite"; break;
             default:     suffix = "Face"; break;
         }
         // NE PAS METTRE /images/, les personnages sont dans ressources/personnages/...
@@ -310,10 +310,10 @@ public class GameController {
         Direction newDir1 = p1Dir;
         boolean moved1 = false, bomb1 = false;
         switch (code) {
-            case Z: newRow1--; newDir1 = Direction.DOS; moved1 = true; break;
-            case S: newRow1++; newDir1 = Direction.FACE; moved1 = true; break;
-            case Q: newCol1--; newDir1 = Direction.GAUCHE; moved1 = true; break;
-            case D: newCol1++; newDir1 = Direction.DROITE; moved1 = true; break;
+            case Z: newRow1--; newDir1 = Direction.UP; moved1 = true; break;
+            case S: newRow1++; newDir1 = Direction.DOWN; moved1 = true; break;
+            case Q: newCol1--; newDir1 = Direction.LEFT; moved1 = true; break;
+            case D: newCol1++; newDir1 = Direction.RIGHT; moved1 = true; break;
             case E: bomb1 = true; break;
         }
         if (moved1 && p1Alive) {
@@ -334,10 +334,10 @@ public class GameController {
         Direction newDir2 = p2Dir;
         boolean moved2 = false, bomb2 = false;
         switch (code) {
-            case I: newRow2--; newDir2 = Direction.DOS; moved2 = true; break;
-            case K: newRow2++; newDir2 = Direction.FACE; moved2 = true; break;
-            case J: newCol2--; newDir2 = Direction.GAUCHE; moved2 = true; break;
-            case L: newCol2++; newDir2 = Direction.DROITE; moved2 = true; break;
+            case I: newRow2--; newDir2 = Direction.UP; moved2 = true; break;
+            case K: newRow2++; newDir2 = Direction.DOWN; moved2 = true; break;
+            case J: newCol2--; newDir2 = Direction.LEFT; moved2 = true; break;
+            case L: newCol2++; newDir2 = Direction.RIGHT; moved2 = true; break;
             case U: bomb2 = true; break;
         }
         if (moved2 && p2Alive) {
@@ -435,8 +435,8 @@ public class GameController {
     }
 
     private void restartRound() {
-        p1Row = 1; p1Col = 1; p1Dir = Direction.FACE; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
-        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.FACE; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
+        p1Row = 1; p1Col = 1; p1Dir = Direction.DOWN; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
+        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.DOWN; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
                 bombs[r][c] = null;
@@ -466,9 +466,9 @@ public class GameController {
 
         ImageView winnerImg;
         if (player == 1) {
-            winnerImg = new ImageView(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
+            winnerImg = new ImageView(getPlayerImage(COLOR_KEYS[indexJ1], Direction.DOWN));
         } else {
-            winnerImg = new ImageView(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
+            winnerImg = new ImageView(getPlayerImage(COLOR_KEYS[indexJ2], Direction.DOWN));
         }
         winnerImg.setFitHeight(80); winnerImg.setFitWidth(80);
 
@@ -513,17 +513,17 @@ public class GameController {
         rightJ1.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
         Label couleurJ1Label = new Label(COLORS[tempIndexJ1[0]]);
         couleurJ1Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        ImageView imageJ1 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.FACE));
+        ImageView imageJ1 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.DOWN));
         imageJ1.setFitWidth(52); imageJ1.setFitHeight(52); imageJ1.setPreserveRatio(true);
         leftJ1.setOnAction(e -> {
             tempIndexJ1[0] = (tempIndexJ1[0] - 1 + COLORS.length) % COLORS.length;
             couleurJ1Label.setText(COLORS[tempIndexJ1[0]]);
-            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.FACE));
+            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.DOWN));
         });
         rightJ1.setOnAction(e -> {
             tempIndexJ1[0] = (tempIndexJ1[0] + 1) % COLORS.length;
             couleurJ1Label.setText(COLORS[tempIndexJ1[0]]);
-            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.FACE));
+            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.DOWN));
         });
         ligneJ1.getChildren().addAll(joueur1Label, leftJ1, couleurJ1Label, rightJ1, imageJ1);
 
@@ -537,17 +537,17 @@ public class GameController {
         rightJ2.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
         Label couleurJ2Label = new Label(COLORS[tempIndexJ2[0]]);
         couleurJ2Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        ImageView imageJ2 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.FACE));
+        ImageView imageJ2 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.DOWN));
         imageJ2.setFitWidth(52); imageJ2.setFitHeight(52); imageJ2.setPreserveRatio(true);
         leftJ2.setOnAction(e -> {
             tempIndexJ2[0] = (tempIndexJ2[0] - 1 + COLORS.length) % COLORS.length;
             couleurJ2Label.setText(COLORS[tempIndexJ2[0]]);
-            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.FACE));
+            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.DOWN));
         });
         rightJ2.setOnAction(e -> {
             tempIndexJ2[0] = (tempIndexJ2[0] + 1) % COLORS.length;
             couleurJ2Label.setText(COLORS[tempIndexJ2[0]]);
-            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.FACE));
+            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.DOWN));
         });
         ligneJ2.getChildren().addAll(joueur2Label, leftJ2, couleurJ2Label, rightJ2, imageJ2);
 
@@ -586,8 +586,8 @@ public class GameController {
             loadThemeAssets();
             drawBoard();
             updatePlayersDisplay();
-            if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
-            if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
+            if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.DOWN));
+            if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.DOWN));
             if (gameScene != null) {
                 stage.setScene(gameScene);
             }
