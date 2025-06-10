@@ -4,6 +4,8 @@ import BomberMan.application.BomberManApp;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -48,16 +50,14 @@ public class GameController {
     private Bomb[][] bombs = new Bomb[rows][cols];
     private boolean[][] isExplosion = new boolean[rows][cols];
 
-    // Personnalisation couleurs des joueurs
     private final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir"};
     private final String[] COLOR_KEYS = {"blanc", "rouge", "bleu", "noir"};
     private int indexJ1 = 0;
     private int indexJ2 = 1;
 
-    // Personnalisation thème de la map (ajout Backrooms)
     private final String[] THEMES = {"Base", "Jungle", "Désert", "Backrooms"};
-    private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "backrooms_asset"};
-    private int themeIndex = 0; // 0: base, 1: jungle, 2: desert, 3: backrooms
+    private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "asset_backrooms"};
+    private int themeIndex = 0;
 
     private Image pelouseImg, wallImg, destructibleImg, bombImg, explosionImg;
     private ImageView[][] cellBackgrounds = new ImageView[rows][cols];
@@ -85,7 +85,7 @@ public class GameController {
 
     private boolean gameEnded = false;
 
-    private Scene gameScene; // pour revenir à la scène de jeu d'origine
+    private Scene gameScene;
 
     private enum Direction { FACE, DOS, GAUCHE, DROITE }
 
@@ -150,7 +150,7 @@ public class GameController {
         if (backMenuButton != null)
             backMenuButton.setOnAction(e -> onBackMenu());
 
-        if (gridPane != null && gridPane.getScene() != null) {
+        if (gridPane != null && gridPane.getScene() != null && gameScene == null) {
             gameScene = gridPane.getScene();
         }
 
@@ -286,7 +286,6 @@ public class GameController {
             case DROITE: suffix = "droite"; break;
             default:     suffix = "face"; break;
         }
-        // NE PAS METTRE /images/, les personnages sont dans ressources/personnages/...
         String path = "/personnages/" + colorKey + "/" + suffix + ".png";
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
@@ -486,117 +485,35 @@ public class GameController {
     }
 
     private void openPersonnalisationPage() {
-        if (gridPane == null || gridPane.getScene() == null) return;
-        Stage stage = (Stage) gridPane.getScene().getWindow();
-        double width = stage.getWidth();
-        double height = stage.getHeight();
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Personnalisation.fxml"));
+            Parent root = loader.load();
+            PersonnalisationController persoController = loader.getController();
+            Stage stage = (Stage) gridPane.getScene().getWindow();
 
-        VBox root = new VBox(32);
-        root.setAlignment(Pos.TOP_CENTER);
-        root.setStyle("-fx-background-color: #222;");
+            persoController.setContext(
+                    stage,
+                    gridPane.getScene(),  // On passe bien la scène de jeu en "previousScene"
+                    (newJ1, newJ2, newTheme) -> {
+                        this.indexJ1 = newJ1;
+                        this.indexJ2 = newJ2;
+                        this.themeIndex = newTheme;
+                        loadThemeAssets();
+                        drawBoard();
+                        updatePlayersDisplay();
+                        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
+                        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
+                    },
+                    this.indexJ1, this.indexJ2, this.themeIndex
+            );
 
-        Label titre = new Label("Personnalisation");
-        titre.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: white;");
-        root.getChildren().add(titre);
+            Scene scene = new Scene(root, stage.getWidth(), stage.getHeight());
+            stage.setScene(scene);
+            stage.show();
 
-        final int[] tempIndexJ1 = {indexJ1};
-        final int[] tempIndexJ2 = {indexJ2};
-        final int[] tempThemeIndex = {themeIndex};
-
-        HBox ligneJ1 = new HBox(16);
-        ligneJ1.setAlignment(Pos.CENTER);
-        Label joueur1Label = new Label("Joueur 1");
-        joueur1Label.setStyle("-fx-font-size: 22px; -fx-text-fill: white; -fx-font-weight: bold;");
-        Button leftJ1 = new Button("<");
-        leftJ1.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
-        Button rightJ1 = new Button(">");
-        rightJ1.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
-        Label couleurJ1Label = new Label(COLORS[tempIndexJ1[0]]);
-        couleurJ1Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        ImageView imageJ1 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.FACE));
-        imageJ1.setFitWidth(52); imageJ1.setFitHeight(52); imageJ1.setPreserveRatio(true);
-        leftJ1.setOnAction(e -> {
-            tempIndexJ1[0] = (tempIndexJ1[0] - 1 + COLORS.length) % COLORS.length;
-            couleurJ1Label.setText(COLORS[tempIndexJ1[0]]);
-            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.FACE));
-        });
-        rightJ1.setOnAction(e -> {
-            tempIndexJ1[0] = (tempIndexJ1[0] + 1) % COLORS.length;
-            couleurJ1Label.setText(COLORS[tempIndexJ1[0]]);
-            imageJ1.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ1[0]], Direction.FACE));
-        });
-        ligneJ1.getChildren().addAll(joueur1Label, leftJ1, couleurJ1Label, rightJ1, imageJ1);
-
-        HBox ligneJ2 = new HBox(16);
-        ligneJ2.setAlignment(Pos.CENTER);
-        Label joueur2Label = new Label("Joueur 2");
-        joueur2Label.setStyle("-fx-font-size: 22px; -fx-text-fill: white; -fx-font-weight: bold;");
-        Button leftJ2 = new Button("<");
-        leftJ2.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
-        Button rightJ2 = new Button(">");
-        rightJ2.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
-        Label couleurJ2Label = new Label(COLORS[tempIndexJ2[0]]);
-        couleurJ2Label.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        ImageView imageJ2 = new ImageView(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.FACE));
-        imageJ2.setFitWidth(52); imageJ2.setFitHeight(52); imageJ2.setPreserveRatio(true);
-        leftJ2.setOnAction(e -> {
-            tempIndexJ2[0] = (tempIndexJ2[0] - 1 + COLORS.length) % COLORS.length;
-            couleurJ2Label.setText(COLORS[tempIndexJ2[0]]);
-            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.FACE));
-        });
-        rightJ2.setOnAction(e -> {
-            tempIndexJ2[0] = (tempIndexJ2[0] + 1) % COLORS.length;
-            couleurJ2Label.setText(COLORS[tempIndexJ2[0]]);
-            imageJ2.setImage(getPlayerImage(COLOR_KEYS[tempIndexJ2[0]], Direction.FACE));
-        });
-        ligneJ2.getChildren().addAll(joueur2Label, leftJ2, couleurJ2Label, rightJ2, imageJ2);
-
-        HBox ligneTheme = new HBox(16);
-        ligneTheme.setAlignment(Pos.CENTER);
-        Label mapLabel = new Label("Map :");
-        mapLabel.setStyle("-fx-font-size: 22px; -fx-text-fill: white; -fx-font-weight: bold;");
-        Button leftTheme = new Button("<");
-        leftTheme.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
-        Button rightTheme = new Button(">");
-        rightTheme.setStyle("-fx-font-size: 20px; -fx-background-radius: 10px;");
-        Label themeNameLabel = new Label(THEMES[tempThemeIndex[0]]);
-        themeNameLabel.setStyle("-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;");
-        ImageView themeImg = new ImageView(getThemePreviewImage(THEME_FOLDERS[tempThemeIndex[0]]));
-        themeImg.setFitWidth(90); themeImg.setFitHeight(52); themeImg.setPreserveRatio(true);
-
-        leftTheme.setOnAction(e -> {
-            tempThemeIndex[0] = (tempThemeIndex[0] - 1 + THEMES.length) % THEMES.length;
-            themeNameLabel.setText(THEMES[tempThemeIndex[0]]);
-            themeImg.setImage(getThemePreviewImage(THEME_FOLDERS[tempThemeIndex[0]]));
-        });
-        rightTheme.setOnAction(e -> {
-            tempThemeIndex[0] = (tempThemeIndex[0] + 1) % THEMES.length;
-            themeNameLabel.setText(THEMES[tempThemeIndex[0]]);
-            themeImg.setImage(getThemePreviewImage(THEME_FOLDERS[tempThemeIndex[0]]));
-        });
-
-        ligneTheme.getChildren().addAll(mapLabel, leftTheme, themeNameLabel, rightTheme, themeImg);
-
-        Button applyBtn = new Button("Appliquer");
-        applyBtn.setStyle("-fx-font-size: 18px; -fx-background-color: #4090c0; -fx-text-fill: white; -fx-padding: 12 32 12 32; -fx-background-radius: 8px;");
-        applyBtn.setOnAction(e -> {
-            indexJ1 = tempIndexJ1[0];
-            indexJ2 = tempIndexJ2[0];
-            themeIndex = tempThemeIndex[0];
-            loadThemeAssets();
-            drawBoard();
-            updatePlayersDisplay();
-            if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
-            if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
-            if (gameScene != null) {
-                stage.setScene(gameScene);
-            }
-        });
-
-        root.getChildren().addAll(ligneJ1, ligneJ2, ligneTheme, applyBtn);
-
-        Scene persoScene = new Scene(root, width, height);
-        stage.setScene(persoScene);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private Image getThemePreviewImage(String themeFolder) {

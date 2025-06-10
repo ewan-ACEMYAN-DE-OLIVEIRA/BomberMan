@@ -1,5 +1,7 @@
 package BomberMan.model;
 
+
+
 import java.util.Random;
 
 public class GameModel {
