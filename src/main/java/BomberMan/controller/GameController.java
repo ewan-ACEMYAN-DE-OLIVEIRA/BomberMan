@@ -91,7 +91,10 @@ public class GameController {
     private boolean gameEnded = false;
 
     private Scene gameScene; // pour revenir à la scène de jeu d'origine
-    
+    @FXML
+    private Button btnRestartMusic;
+    @FXML
+    private ImageView restartIcon;
     @FXML
     private Button btnPauseMusic;
     @FXML
@@ -210,6 +213,21 @@ public class GameController {
                     mediaPlayer.pause();
                     if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/play.png").toExternalForm()));
                     isMusicPaused = true;
+                }
+            });
+        }
+        if (restartIcon != null) {
+            restartIcon.setImage(new Image(getClass().getResource("/images/revenir.png").toExternalForm()));
+        }
+        if (btnRestartMusic != null) {
+            btnRestartMusic.setOnAction(e -> {
+                if (mediaPlayer != null) {
+                    mediaPlayer.seek(javafx.util.Duration.ZERO);
+                    if (isMusicPaused) {
+                        mediaPlayer.play();
+                        isMusicPaused = false;
+                        pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+                    }
                 }
             });
         }
