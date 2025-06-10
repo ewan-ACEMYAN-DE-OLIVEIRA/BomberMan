@@ -114,7 +114,8 @@ public class GameController {
             "/Musique/background10.mp3",
             "/Musique/background11.mp3",
             "/Musique/background12.mp3",
-            "/Musique/background13.mp3"
+            "/Musique/background13.mp3",
+            "/Musique/background14.mp3"
             // Ajoute les chemins de tes musiques ici
     );
     private int currentMusicIndex = 0;
