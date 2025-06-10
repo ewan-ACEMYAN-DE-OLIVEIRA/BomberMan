@@ -54,10 +54,10 @@ public class GameController {
     private int indexJ1 = 0;
     private int indexJ2 = 1;
 
-    // Personnalisation thème de la map
-    private final String[] THEMES = {"Base", "Jungle", "Désert"};
-    private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert"};
-    private int themeIndex = 0; // 0: base, 1: jungle, 2: desert
+    // Personnalisation thème de la map (ajout Backrooms)
+    private final String[] THEMES = {"Base", "Jungle", "Désert", "Backrooms"};
+    private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "backrooms_asset"};
+    private int themeIndex = 0; // 0: base, 1: jungle, 2: desert, 3: backrooms
 
     private Image pelouseImg, wallImg, destructibleImg, bombImg, explosionImg;
     private ImageView[][] cellBackgrounds = new ImageView[rows][cols];
@@ -100,9 +100,8 @@ public class GameController {
 
     @FXML
     public void initialize() {
-        loadThemeAssets(); // charge pelouseImg, wallImg...
+        loadThemeAssets();
 
-        // Les icônes du score en haut sont mises à jour dynamiquement suivant la couleur choisie
         if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
         if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
 
@@ -151,7 +150,6 @@ public class GameController {
         if (backMenuButton != null)
             backMenuButton.setOnAction(e -> onBackMenu());
 
-        // Stocker la scène de jeu d'origine
         if (gridPane != null && gridPane.getScene() != null) {
             gameScene = gridPane.getScene();
         }
@@ -171,11 +169,15 @@ public class GameController {
     }
 
     private Image loadAsset(String folder, String file) {
-        String path = "/" + folder + "/" + file;
+        String path = "/images/" + folder + "/" + file;
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
             System.err.println("Asset manquant: " + path + ", fallback sur asset_base");
-            url = getClass().getResource("/asset_base/" + file);
+            url = getClass().getResource("/images/asset_base/" + file);
+        }
+        if (url == null) {
+            System.err.println("Image absente aussi dans asset_base: " + file);
+            return new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9W5x3QAAAABJRU5ErkJggg==");
         }
         return new Image(url.toString());
     }
@@ -284,11 +286,16 @@ public class GameController {
             case DROITE: suffix = "droite"; break;
             default:     suffix = "face"; break;
         }
+        // NE PAS METTRE /images/, les personnages sont dans ressources/personnages/...
         String path = "/personnages/" + colorKey + "/" + suffix + ".png";
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
             System.err.println("Image non trouvée : " + path);
             url = getClass().getResource("/personnages/blanc/face.png");
+        }
+        if (url == null) {
+            System.err.println("Fallback impossible : image joueur manquante.");
+            return new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9W5x3QAAAABJRU5ErkJggg==");
         }
         return new Image(url.toString());
     }
@@ -457,7 +464,6 @@ public class GameController {
         Label label = new Label(msg);
         label.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
-        // Utilise la couleur choisie pour l'image du joueur vainqueur
         ImageView winnerImg;
         if (player == 1) {
             winnerImg = new ImageView(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
@@ -479,7 +485,6 @@ public class GameController {
         dialog.show();
     }
 
-    // PAGE DE PERSONNALISATION AVEC BOUTON APPLIQUER ET GESTION THEME
     private void openPersonnalisationPage() {
         if (gridPane == null || gridPane.getScene() == null) return;
         Stage stage = (Stage) gridPane.getScene().getWindow();
@@ -498,7 +503,6 @@ public class GameController {
         final int[] tempIndexJ2 = {indexJ2};
         final int[] tempThemeIndex = {themeIndex};
 
-        // 1ère ligne Joueur 1
         HBox ligneJ1 = new HBox(16);
         ligneJ1.setAlignment(Pos.CENTER);
         Label joueur1Label = new Label("Joueur 1");
@@ -523,7 +527,6 @@ public class GameController {
         });
         ligneJ1.getChildren().addAll(joueur1Label, leftJ1, couleurJ1Label, rightJ1, imageJ1);
 
-        // 2ème ligne Joueur 2
         HBox ligneJ2 = new HBox(16);
         ligneJ2.setAlignment(Pos.CENTER);
         Label joueur2Label = new Label("Joueur 2");
@@ -548,7 +551,6 @@ public class GameController {
         });
         ligneJ2.getChildren().addAll(joueur2Label, leftJ2, couleurJ2Label, rightJ2, imageJ2);
 
-        // 3ème ligne Map/Thème
         HBox ligneTheme = new HBox(16);
         ligneTheme.setAlignment(Pos.CENTER);
         Label mapLabel = new Label("Map :");
@@ -575,11 +577,9 @@ public class GameController {
 
         ligneTheme.getChildren().addAll(mapLabel, leftTheme, themeNameLabel, rightTheme, themeImg);
 
-        // --- Bouton Appliquer
         Button applyBtn = new Button("Appliquer");
         applyBtn.setStyle("-fx-font-size: 18px; -fx-background-color: #4090c0; -fx-text-fill: white; -fx-padding: 12 32 12 32; -fx-background-radius: 8px;");
         applyBtn.setOnAction(e -> {
-            // Appliquer les couleurs sélectionnées
             indexJ1 = tempIndexJ1[0];
             indexJ2 = tempIndexJ2[0];
             themeIndex = tempThemeIndex[0];
@@ -600,11 +600,15 @@ public class GameController {
     }
 
     private Image getThemePreviewImage(String themeFolder) {
-        String path = "/" + themeFolder + "/map.png";
+        String path = "/images/" + themeFolder + "/map.png";
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
             System.err.println("Image de thème non trouvée : " + path);
-            url = getClass().getResource("/asset_base/map.png");
+            url = getClass().getResource("/images/asset_base/map.png");
+        }
+        if (url == null) {
+            System.err.println("Image absente aussi dans asset_base: map.png");
+            return new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9W5x3QAAAABJRU5ErkJggg==");
         }
         return new Image(url.toString());
     }

@@ -7,18 +7,18 @@
 
 .cell-empty {
     -fx-background-color: #f8f8f8;
-    -fx-background-image: url("../images/base_asset/pelouse.png");
+    -fx-background-image: url("../images/asset_base/pelouse.png");
     -fx-background-size: cover;
     -fx-background-repeat: no-repeat;
 }
 
 .cell-wall {
-    -fx-background-image: url("../images/base_asset/wall.png");
+    -fx-background-image: url("../images/asset_base/wall.png");
     -fx-background-size: cover;
 }
 
 .cell-destructible {
-    -fx-background-image: url("../images/base_asset/destructible.png");
+    -fx-background-image: url("../images/asset_base/destructible.png");
     -fx-background-size: cover;
 }
 
@@ -27,14 +27,14 @@
 }
 
 .cell-bomb {
-    -fx-background-image: url("../images/base_asset/bomb.png");
+    -fx-background-image: url("../images/asset_base/bomb.png");
     -fx-background-size: cover;
     -fx-background-color: #00AC4B;
 }
 
 .cell-explosion {
     -fx-background-color: #ff3333;
-    -fx-background-image: url("../images/base_asset/explosion.png");
+    -fx-background-image: url("../images/asset_base/explosion.png");
     -fx-background-size: cover;
     -fx-opacity: 0.85;
 }
@@ -166,18 +166,18 @@
 .cell-player1 { -fx-background-color: #00AC4B; }
 .cell-player2 { -fx-background-color: #00AC4B; }
 .cell-bomb1   { ;
-    -fx-background-image: url("../images/base_asset/bomb.png");
+    -fx-background-image: url("../images/asset_base/bomb.png");
     -fx-background-size: cover;
     -fx-background-color: #00AC4B;}
 .cell-bomb2   {
-    -fx-background-image: url("../images/base_asset/bomb.png");
+    -fx-background-image: url("../images/asset_base/bomb.png");
     -fx-background-size: cover;
     -fx-background-color: #00AC4B;}
 .cell-bonus-range { -fx-background-color: #00AC4B;
-    -fx-background-image: url("../images/base_asset/bonus.png");
+    -fx-background-image: url("../images/asset_base/bonus.png");
     -fx-background-size: cover;}
 .cell-malus-range { -fx-background-color: #00AC4B;
-    -fx-background-image: url("../images/base_asset/bonus.png");
+    -fx-background-image: url("../images/asset_base/bonus.png");
     -fx-background-size: cover;}
 
 .cell-ai {
