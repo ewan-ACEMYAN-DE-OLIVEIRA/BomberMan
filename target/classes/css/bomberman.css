@@ -1,0 +1,43 @@
+.menu-back-button {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-color: #ffe8b0;
+    -fx-border-color: #c09040;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-text-fill: #994400;
+    -fx-padding: 8 24 8 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, #c0a060, 2, 0.1, 1, 2);
+    -fx-transition: background-color 0.2s, scale 0.2s;
+    -fx-shadow-highlight-color: transparent;
+}
+
+.menu-back-button:hover {
+    -fx-background-color: #ffd880;
+    -fx-scale-x: 1.04;
+    -fx-scale-y: 1.04;
+    -fx-effect: dropshadow(gaussian, #e9b24a, 8, 0.18, 0, 4);
+}
+
+
+#btnPerso {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-background-color: #b0e8ff;
+    -fx-border-color: #4090c0;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 8 24 8 24;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, #60a0c0, 2, 0.1, 1, 2);
+    -fx-transition: background-color 0.2s, scale 0.2s;
+    -fx-shadow-highlight-color: transparent;
+}
+
+#btnPerso:hover {
+    -fx-background-color: #80d8ff;
+    -fx-scale-x: 1.04;
+    -fx-scale-y: 1.04;
+    -fx-effect: dropshadow(gaussian, #4ab2e9, 8, 0.18, 0, 4);
+}
