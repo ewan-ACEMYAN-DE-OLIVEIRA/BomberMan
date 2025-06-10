@@ -36,12 +36,16 @@ public class BomberManApp extends Application {
     }
 
     public static void showGame(boolean is1v1) {
+        showGame(is1v1, null);
+    }
+
+    public static void showGame(boolean is1v1, String difficulty) {
         try {
             FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/FXML/game.fxml"));
             Scene scene = new Scene(loader.load());
             scene.getStylesheets().add(BomberManApp.class.getResource("/css/bomberman.css").toExternalForm());
             GameController controller = loader.getController();
-            controller.initGame(is1v1);
+            controller.initGame(is1v1, difficulty); // Passe la difficulté
             primaryStage.setScene(scene);
         } catch (Exception e) {
             e.printStackTrace();

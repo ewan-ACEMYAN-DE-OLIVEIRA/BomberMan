@@ -78,6 +78,16 @@ public class GameController {
     //son bonus
     private AudioClip bonusSound;
 
+    //ia
+    private String iaDifficulty = null;
+    private boolean isIaFacile = false;
+    private boolean isIaNormal = false;
+    private boolean isIaDifficile = false;
+    private Random aiRandom = new Random();
+    private Timeline iaTimeline;
+    private int iaBombCooldown = 0;
+
+
     private int p1Row = 1, p1Col = 1;
     private Direction p1Dir = Direction.DOWN;
     private int p1BombCount = 0;
@@ -345,10 +355,14 @@ public class GameController {
         playMusic(currentMusicIndex);
     }
 
-    public void initGame(boolean is1v1) {
+    public void initGame(boolean is1v1, String difficulty) {
         scoreP1 = 0;
         scoreP2 = 0;
         gameEnded = false;
+        this.iaDifficulty = difficulty;
+        isIaFacile = !is1v1 && "Facile".equalsIgnoreCase(difficulty);
+        isIaNormal = !is1v1 && "Normal".equalsIgnoreCase(difficulty);
+        isIaDifficile = !is1v1 && "Difficile".equalsIgnoreCase(difficulty);
         p1Row = 1; p1Col = 1; p1Dir = Direction.DOWN; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
         p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.DOWN; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
 
@@ -370,9 +384,179 @@ public class GameController {
         timerTimeline.stop();
         timerTimeline.playFromStart();
 
+        if (iaTimeline != null) iaTimeline.stop();
+
+        if (isIaFacile) {
+            iaTimeline = new Timeline(new KeyFrame(Duration.seconds(1.2), e -> iaRandomMove())); // <- ralentis ici
+            iaTimeline.setCycleCount(Timeline.INDEFINITE);
+            iaTimeline.play();
+        }
+        if (isIaNormal) {
+            iaTimeline = new Timeline(new KeyFrame(Duration.seconds(0.4), e -> iaSmartMove())); // même lenteur, tu peux ajuster
+            iaTimeline.setCycleCount(Timeline.INDEFINITE);
+            iaTimeline.play();
+        }
         gridPane.requestFocus();
     }
 
+    private void iaRandomMove() {
+        if (!isIaFacile || gameEnded || !p2Alive) return;
+
+        List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+        Collections.shuffle(directions, aiRandom);
+
+        // Essaye chaque direction aléatoirement, s'arrête dès que ça bouge
+        for (Direction dir : directions) {
+            int newRow = p2Row, newCol = p2Col;
+            switch (dir) {
+                case UP:    newRow--; break;
+                case DOWN:  newRow++; break;
+                case LEFT:  newCol--; break;
+                case RIGHT: newCol++; break;
+            }
+            if (isWalkable(newRow, newCol, 2)) {
+                p2Row = newRow;
+                p2Col = newCol;
+                p2Dir = dir;
+                updatePlayersDisplay();
+                // Ramasse bonus/malus si présent
+                if (map[p2Row][p2Col].equals("bonus_range")) {
+                    p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
+                    if (bonusSound != null) bonusSound.play();
+                    map[p2Row][p2Col] = "pelouse";
+                    updateBonusesDisplay();
+                } else if (map[p2Row][p2Col].equals("malus_range")) {
+                    p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+                    map[p2Row][p2Col] = "pelouse";
+                    updateBonusesDisplay();
+                }
+                break;
+            }
+        }
+        // Petite chance de poser une bombe
+        if (aiRandom.nextDouble() < 0.25) {
+            placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
+        }
+    }
+    private Set<String> getDangerCells() {
+        Set<String> dangerCells = new HashSet<>();
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                Bomb bomb = bombs[r][c];
+                if (bomb != null) {
+                    // Ajoute la case de la bombe
+                    dangerCells.add(r + "," + c);
+                    // Ajoute les cases touchées par l'explosion
+                    for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
+                        for (int dist = 1; dist <= bomb.radius; dist++) {
+                            int nr = r + dir[0]*dist, nc = c + dir[1]*dist;
+                            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) break;
+                            if (map[nr][nc].equals("wall")) break;
+                            dangerCells.add(nr + "," + nc);
+                            if (map[nr][nc].equals("destructible")) break;
+                        }
+                    }
+                }
+            }
+        }
+        return dangerCells;
+    }
+    private void iaSmartMove() {
+        if (!isIaNormal || gameEnded || !p2Alive) return;
+
+        Set<String> dangerCells = getDangerCells();
+        boolean inDanger = dangerCells.contains(p2Row + "," + p2Col);
+
+        if (inDanger) {
+            // Cherche toutes les directions où fuir
+            List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+            Collections.shuffle(directions, aiRandom);
+
+            boolean movedToSafe = false;
+            // 1. Essayer d'aller sur une case walkable ET non dangereuse
+            for (Direction dir : directions) {
+                int newRow = p2Row, newCol = p2Col;
+                switch (dir) {
+                    case UP:    newRow--; break;
+                    case DOWN:  newRow++; break;
+                    case LEFT:  newCol--; break;
+                    case RIGHT: newCol++; break;
+                }
+                if (isWalkable(newRow, newCol, 2) && !dangerCells.contains(newRow + "," + newCol)) {
+                    p2Row = newRow;
+                    p2Col = newCol;
+                    p2Dir = dir;
+                    updatePlayersDisplay();
+                    movedToSafe = true;
+                    break;
+                }
+            }
+            // 2. Si aucune case safe dispo, bouger vers n'importe quelle case walkable (même si dangereuse)
+            if (!movedToSafe) {
+                for (Direction dir : directions) {
+                    int newRow = p2Row, newCol = p2Col;
+                    switch (dir) {
+                        case UP:    newRow--; break;
+                        case DOWN:  newRow++; break;
+                        case LEFT:  newCol--; break;
+                        case RIGHT: newCol++; break;
+                    }
+                    if (isWalkable(newRow, newCol, 2)) {
+                        p2Row = newRow;
+                        p2Col = newCol;
+                        p2Dir = dir;
+                        updatePlayersDisplay();
+                        break;
+                    }
+                }
+            }
+        } else {
+            // S'il n'est pas en danger, déplacement aléatoire
+            List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+            Collections.shuffle(directions, aiRandom);
+
+            for (Direction dir : directions) {
+                int newRow = p2Row, newCol = p2Col;
+                switch (dir) {
+                    case UP:    newRow--; break;
+                    case DOWN:  newRow++; break;
+                    case LEFT:  newCol--; break;
+                    case RIGHT: newCol++; break;
+                }
+                if (isWalkable(newRow, newCol, 2)) {
+                    p2Row = newRow;
+                    p2Col = newCol;
+                    p2Dir = dir;
+                    updatePlayersDisplay();
+                    break;
+                }
+            }
+        }
+
+        // Ramasse bonus/malus si présent
+        if (map[p2Row][p2Col].equals("bonus_range")) {
+            p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
+            if (bonusSound != null) bonusSound.play();
+            map[p2Row][p2Col] = "pelouse";
+            updateBonusesDisplay();
+        } else if (map[p2Row][p2Col].equals("malus_range")) {
+            p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+            map[p2Row][p2Col] = "pelouse";
+            updateBonusesDisplay();
+        }
+
+        // Petite chance de poser une bombe, mais NE POSE PAS si tu es déjà sur une bombe !
+        if (aiRandom.nextDouble() < 0.25 && bombs[p2Row][p2Col] == null) {
+            placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
+        }
+        if (iaBombCooldown > 0) iaBombCooldown--;
+
+// ... et pour poser une bombe :
+        if (iaBombCooldown == 0 && aiRandom.nextDouble() < 0.25 && bombs[p2Row][p2Col] == null && !getDangerCells().contains(p2Row + "," + p2Col)) {
+            placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
+            iaBombCooldown = 10; // par exemple, 8 cycles de Timeline (si Timeline à 0.1s, ça fait 0.8s)
+        }
+    }
     private void updateBonusesDisplay() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
