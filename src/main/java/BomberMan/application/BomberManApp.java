@@ -19,6 +19,8 @@ public class BomberManApp extends Application {
         primaryStage = stage;
         showMenu();
         primaryStage.setTitle("SuperBomberman");
+        primaryStage.setMinWidth(700);
+        primaryStage.setMinHeight(700);
         primaryStage.show();
     }
 

@@ -30,7 +30,9 @@
     </top>
 
     <center>
-        <GridPane fx:id="gridPane" alignment="CENTER" hgap="0" vgap="0" style="-fx-background-color: #282828;"/>
+        <StackPane fx:id="gameCenterPane" style="-fx-background-color: #222;">
+            <GridPane fx:id="gridPane" alignment="CENTER" hgap="0" vgap="0"/>
+        </StackPane>
     </center>
 
     <bottom>

@@ -6,15 +6,10 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.image.Image?>
 
-<StackPane xmlns:fx="http://javafx.com/fxml"
+<StackPane minWidth="700" minHeight="700" xmlns:fx="http://javafx.com/fxml"
            fx:controller="BomberMan.controller.MenuController"
+           styleClass="root"
            stylesheets="@/css/menu.css">
-    <!-- Image de fond -->
-    <ImageView fitWidth="800" fitHeight="600" preserveRatio="false">
-        <image>
-            <Image url="@/images/background.png"/>
-        </image>
-    </ImageView>
     <!-- Menu au-dessus de l'image de fond -->
     <VBox alignment="CENTER" spacing="18" styleClass="menu-background">
         <Text text="SUPER&#10;BOMBERMAN" styleClass="menu-title"/>

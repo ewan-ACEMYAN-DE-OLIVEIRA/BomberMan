@@ -45,9 +45,10 @@ public class GameController {
     private HBox bottomBar;
     @FXML
     private Button btnPerso;
+    @FXML
+    private StackPane gameCenterPane;
 
     private final int rows = 13, cols = 15;
-    private final int cellSize = 40;
 
     private String[][] map = new String[rows][cols];
     private Bomb[][] bombs = new Bomb[rows][cols];
@@ -62,7 +63,7 @@ public class GameController {
     private int indexJ1 = 0;
     private int indexJ2 = 1;
 
-    // Personnalisation thème de la map (ajout Backrooms)
+    // Personnalisation thème de la map
     private final String[] THEMES = {"Base", "Jungle", "Désert", "Backrooms"};
     private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "backrooms_asset"};
     private int themeIndex = 0; // 0: base, 1: jungle, 2: desert, 3: backrooms
@@ -106,7 +107,7 @@ public class GameController {
     private ImageView pauseIcon;
     @FXML
     private ImageView nextIcon;
-    
+
     private List<String> musicFiles = Arrays.asList(
             "/Musique/background1.mp3",
             "/Musique/background2.mp3",
@@ -122,12 +123,11 @@ public class GameController {
             "/Musique/background12.mp3",
             "/Musique/background13.mp3",
             "/Musique/background14.mp3"
-            // Ajoute les chemins de tes musiques ici
     );
     private int currentMusicIndex = 0;
     private MediaPlayer mediaPlayer;
     private boolean isMusicPaused = false;
-    
+
     private static class Bomb {
         int row, col;
         int owner;
@@ -140,6 +140,7 @@ public class GameController {
     @FXML
     public void initialize() {
         loadThemeAssets();
+        setupGridPaneResize();
 
         if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.DOWN));
         if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.DOWN));
@@ -148,36 +149,43 @@ public class GameController {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 StackPane cell = new StackPane();
-                cell.setPrefSize(cellSize, cellSize);
+                cell.setMinSize(0, 0);
+                cell.setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+                cell.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
 
-                ImageView bg    = new ImageView(); bg.setFitWidth(cellSize); bg.setFitHeight(cellSize);
-                cellBackgrounds[r][c] = bg;
-
-                ImageView expl  = new ImageView(); expl.setFitWidth(cellSize); expl.setFitHeight(cellSize);
-                expl.setVisible(false); cellExplosions[r][c] = expl;
-
-                ImageView bomb  = new ImageView(); bomb.setFitWidth(cellSize); bomb.setFitHeight(cellSize);
-                bomb.setVisible(false); cellBombs[r][c] = bomb;
-
-                ImageView p1    = new ImageView(); p1.setFitWidth(cellSize); p1.setFitHeight(cellSize);
-                p1.setVisible(false); cellPlayer1[r][c] = p1;
-
-                ImageView p2    = new ImageView(); p2.setFitWidth(cellSize); p2.setFitHeight(cellSize);
-                p2.setVisible(false); cellPlayer2[r][c] = p2;
-
+                ImageView bg    = new ImageView();
+                ImageView expl  = new ImageView();
+                ImageView bomb  = new ImageView();
+                ImageView p1    = new ImageView();
+                ImageView p2    = new ImageView();
                 ImageView bonus = new ImageView();
-                bonus.setFitWidth(cellSize);
-                bonus.setFitHeight(cellSize);
-                bonus.setVisible(false);
-                cellBonuses[r][c] = bonus;
 
-                cell.getChildren().addAll(bg);
-                cell.getChildren().add(bonus);
-                cell.getChildren().addAll(expl, bomb, p1, p2);
+                // Bind la taille de chaque image à la taille de la cellule
+                for (ImageView img : new ImageView[]{bg, expl, bomb, p1, p2, bonus}) {
+                    img.fitWidthProperty().bind(cell.widthProperty());
+                    img.fitHeightProperty().bind(cell.heightProperty());
+                    img.setPreserveRatio(true);
+                }
+
+                expl.setVisible(false);
+                bomb.setVisible(false);
+                p1.setVisible(false);
+                p2.setVisible(false);
+                bonus.setVisible(false);
+
+                cellBackgrounds[r][c] = bg;
+                cellExplosions[r][c]  = expl;
+                cellBombs[r][c]       = bomb;
+                cellPlayer1[r][c]     = p1;
+                cellPlayer2[r][c]     = p2;
+                cellBonuses[r][c]     = bonus;
+
+                cell.getChildren().addAll(bg, bonus, expl, bomb, p1, p2);
 
                 gridPane.add(cell, c, r);
             }
         }
+
         generateRandomMap();
         updateBombs();
         updateExplosions();
@@ -244,6 +252,39 @@ public class GameController {
             });
         }
         playMusic(currentMusicIndex);
+        gameCenterPane.widthProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
+        gameCenterPane.heightProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
+        resizeGridPane();
+    }
+
+    private void resizeGridPane() {
+        double paneW = gameCenterPane.getWidth();
+        double paneH = gameCenterPane.getHeight();
+
+        // Respecte le ratio cols/rows, cases carrées
+        double cellSize = Math.min(paneW / cols, paneH / rows);
+
+        gridPane.setPrefWidth(cellSize * cols);
+        gridPane.setPrefHeight(cellSize * rows);
+        gridPane.setMaxWidth(cellSize * cols);
+        gridPane.setMaxHeight(cellSize * rows);
+    }
+
+    private void setupGridPaneResize() {
+        gridPane.getColumnConstraints().clear();
+        gridPane.getRowConstraints().clear();
+        for (int c = 0; c < cols; c++) {
+            ColumnConstraints colConst = new ColumnConstraints();
+            colConst.setPercentWidth(100.0 / cols);
+            colConst.setHgrow(Priority.ALWAYS);
+            gridPane.getColumnConstraints().add(colConst);
+        }
+        for (int r = 0; r < rows; r++) {
+            RowConstraints rowConst = new RowConstraints();
+            rowConst.setPercentHeight(100.0 / rows);
+            rowConst.setVgrow(Priority.ALWAYS);
+            gridPane.getRowConstraints().add(rowConst);
+        }
     }
 
     private void loadThemeAssets() {
@@ -269,7 +310,7 @@ public class GameController {
         }
         return new Image(url.toString());
     }
-    
+
     private void playMusic(int index) {
         try {
             if (mediaPlayer != null) mediaPlayer.stop();
@@ -290,11 +331,12 @@ public class GameController {
             System.err.println("Erreur lors de la lecture de la musique : " + e.getMessage());
         }
     }
-    
+
     private void playNextMusic() {
         currentMusicIndex = (currentMusicIndex + 1) % musicFiles.size();
         playMusic(currentMusicIndex);
     }
+
     public void initGame(boolean is1v1) {
         scoreP1 = 0;
         scoreP2 = 0;
@@ -322,6 +364,7 @@ public class GameController {
 
         gridPane.requestFocus();
     }
+
     private void updateBonusesDisplay() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -332,6 +375,7 @@ public class GameController {
                 }
             }
     }
+
     private void generateRandomMap() {
         Random rand = new Random();
         int[][] joueurs = {{1, 1}, {rows - 2, cols - 2}};
@@ -366,6 +410,7 @@ public class GameController {
                 cellBackgrounds[r][c].setImage(img);
             }
     }
+
     private void updateBombs() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -403,11 +448,10 @@ public class GameController {
         String suffix;
         switch (dir) {
             case UP:    suffix = "Dos"; break;
-            case LEFT: suffix = "Gauche"; break;
+            case LEFT:  suffix = "Gauche"; break;
             case RIGHT: suffix = "Droite"; break;
-            default:     suffix = "Face"; break;
+            default:    suffix = "Face"; break;
         }
-        // NE PAS METTRE /images/, les personnages sont dans ressources/personnages/...
         String path = "/Personnages/" + colorKey + "/" + suffix + ".png";
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
@@ -459,7 +503,6 @@ public class GameController {
             if (isWalkable(newRow1, newCol1, 1)) {
                 p1Row = newRow1;
                 p1Col = newCol1;
-                // --- récupération bonus/malus automatique
                 if (map[p1Row][p1Col].equals("bonus_range"))
                     p1ExplosionRadius = Math.min(p1ExplosionRadius + 1, 10);
                 else if (map[p1Row][p1Col].equals("malus_range"))
@@ -510,9 +553,8 @@ public class GameController {
             if (isWalkable(newRow2, newCol2, 2)) {
                 p2Row = newRow2;
                 p2Col = newCol2;
-                // --- récupération bonus/malus automatique
                 if (map[p2Row][p2Col].equals("bonus_range"))
-                    p1ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
+                    p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
                 else if (map[p2Row][p2Col].equals("malus_range"))
                     p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
                 if (map[p2Row][p2Col].equals("bonus_range") || map[p2Row][p2Col].equals("malus_range")) {
@@ -582,7 +624,6 @@ public class GameController {
             if (p1Alive && r == p1Row && c == p1Col) p1Killed.set(true);
             if (p2Alive && r == p2Row && c == p2Col) p2Killed.set(true);
             if (map[r][c].equals("destructible")) {
-                // Apparition aléatoire d’un bonus ou malus (par exemple 15% bonus, 10% malus, 75% rien)
                 double rand = Math.random();
                 if (rand < 0.15) {
                     map[r][c] = "bonus_range";

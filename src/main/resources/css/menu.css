@@ -31,5 +31,15 @@
     -fx-translate-y: 0;
     -fx-transition: all 0.2s;
 }
-
-
+.root, .menu-background, .stack-pane {
+    -fx-background-image: url("../images/background.png");
+    -fx-background-size: cover; /* ou contain selon l'effet voulu */
+    -fx-background-position: center center;
+    -fx-background-repeat: no-repeat;
+    -fx-background-color: #222; /* couleur de fond si image trop petite */
+    -fx-background-size: contain;
+}
+.root {
+    -fx-min-width: 700px;
+    -fx-min-height: 700px;
+}

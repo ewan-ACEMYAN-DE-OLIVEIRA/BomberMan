@@ -185,3 +185,9 @@
     -fx-background-image: url("../Personnages/Blanc/Dos.png"); /* à adapter */
     -fx-background-size: cover;
 }
+.root, .border-pane, .game-bg {
+    -fx-background-color: linear-gradient(to bottom, #4FC3F7, #01579B);
+}
+.scroll-pane, .vbox, .game-grid, .center-pane {
+    -fx-background-color: transparent; /* ou la même couleur de fond que la racine */
+}
