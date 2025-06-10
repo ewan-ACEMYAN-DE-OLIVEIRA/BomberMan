@@ -266,28 +266,6 @@ public class GameController {
                 cellBackgrounds[r][c].setImage(img);
             }
     }
-    private void placeRandomBonuses(int nbBonus, int nbMalus) {
-        Random rand = new Random();
-        // Récupère toutes les coordonnées pelouse
-        List<int[]> pelouseCells = new ArrayList<>();
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                if (map[r][c].equals("pelouse")
-                        && (r != p1Row || c != p1Col) && (r != p2Row || c != p2Col)) {
-                    pelouseCells.add(new int[]{r, c});
-                }
-            }
-        }
-        Collections.shuffle(pelouseCells, rand);
-        for (int i = 0; i < nbBonus && i < pelouseCells.size(); i++) {
-            int[] pos = pelouseCells.get(i);
-            map[pos[0]][pos[1]] = "bonus_range";
-        }
-        for (int i = nbBonus; i < nbBonus + nbMalus && i < pelouseCells.size(); i++) {
-            int[] pos = pelouseCells.get(i);
-            map[pos[0]][pos[1]] = "malus_range";
-        }
-    }
     private void updateBombs() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -353,16 +331,43 @@ public class GameController {
         Direction newDir1 = p1Dir;
         boolean moved1 = false, bomb1 = false;
         switch (code) {
-            case Z: newRow1--; newDir1 = Direction.UP; moved1 = true; break;
-            case S: newRow1++; newDir1 = Direction.DOWN; moved1 = true; break;
-            case Q: newCol1--; newDir1 = Direction.LEFT; moved1 = true; break;
-            case D: newCol1++; newDir1 = Direction.RIGHT; moved1 = true; break;
-            case E: bomb1 = true; break;
+            case Z:
+                newRow1--;
+                newDir1 = Direction.UP;
+                moved1 = true;
+                break;
+            case S:
+                newRow1++;
+                newDir1 = Direction.DOWN;
+                moved1 = true;
+                break;
+            case Q:
+                newCol1--;
+                newDir1 = Direction.LEFT;
+                moved1 = true;
+                break;
+            case D:
+                newCol1++;
+                newDir1 = Direction.RIGHT;
+                moved1 = true;
+                break;
+            case E:
+                bomb1 = true;
+                break;
         }
         if (moved1 && p1Alive) {
             if (isWalkable(newRow1, newCol1, 1)) {
                 p1Row = newRow1;
                 p1Col = newCol1;
+                // --- récupération bonus/malus automatique
+                if (map[p1Row][p1Col].equals("bonus_range"))
+                    p1ExplosionRadius = Math.min(p1ExplosionRadius + 1, 10);
+                else if (map[p1Row][p1Col].equals("malus_range"))
+                    p1ExplosionRadius = Math.max(p1ExplosionRadius - 1, 1);
+                if (map[p1Row][p1Col].equals("bonus_range") || map[p1Row][p1Col].equals("malus_range")) {
+                    map[p1Row][p1Col] = "pelouse";
+                    updateBonusesDisplay();
+                }
             }
             p1Dir = newDir1;
             updatePlayersDisplay();
@@ -377,16 +382,43 @@ public class GameController {
         Direction newDir2 = p2Dir;
         boolean moved2 = false, bomb2 = false;
         switch (code) {
-            case I: newRow2--; newDir2 = Direction.UP; moved2 = true; break;
-            case K: newRow2++; newDir2 = Direction.DOWN; moved2 = true; break;
-            case J: newCol2--; newDir2 = Direction.LEFT; moved2 = true; break;
-            case L: newCol2++; newDir2 = Direction.RIGHT; moved2 = true; break;
-            case U: bomb2 = true; break;
+            case I:
+                newRow2--;
+                newDir2 = Direction.UP;
+                moved2 = true;
+                break;
+            case K:
+                newRow2++;
+                newDir2 = Direction.DOWN;
+                moved2 = true;
+                break;
+            case J:
+                newCol2--;
+                newDir2 = Direction.LEFT;
+                moved2 = true;
+                break;
+            case L:
+                newCol2++;
+                newDir2 = Direction.RIGHT;
+                moved2 = true;
+                break;
+            case U:
+                bomb2 = true;
+                break;
         }
         if (moved2 && p2Alive) {
             if (isWalkable(newRow2, newCol2, 2)) {
                 p2Row = newRow2;
                 p2Col = newCol2;
+                // --- récupération bonus/malus automatique
+                if (map[p2Row][p2Col].equals("bonus_range"))
+                    p1ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
+                else if (map[p2Row][p2Col].equals("malus_range"))
+                    p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+                if (map[p2Row][p2Col].equals("bonus_range") || map[p2Row][p2Col].equals("malus_range")) {
+                    map[p2Row][p2Col] = "pelouse";
+                    updateBonusesDisplay();
+                }
             }
             p2Dir = newDir2;
             updatePlayersDisplay();
@@ -394,16 +426,6 @@ public class GameController {
         }
         if (bomb2 && p2Alive) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
-        }
-        if (p1Alive && map[p1Row][p1Col].equals("bonus_range")) {
-            p1ExplosionRadius = Math.min(p1ExplosionRadius + 1, 10); // Limite max portée
-            map[p1Row][p1Col] = "pelouse";
-            updateBonusesDisplay();
-        }
-        if (p2Alive && map[p2Row][p2Col].equals("bonus_range")) {
-            p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
-            map[p2Row][p2Col] = "pelouse";
-            updateBonusesDisplay();
         }
     }
 
@@ -473,6 +495,7 @@ public class GameController {
             if (bombs[r][c] != null) explodeBomb(r, c);
         }
         drawBoard();
+        updateBonusesDisplay();
 
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> {
             for (int[] cell : explosionCells) isExplosion[cell[0]][cell[1]] = false;
@@ -498,13 +521,15 @@ public class GameController {
     private void restartRound() {
         p1Row = 1; p1Col = 1; p1Dir = Direction.DOWN; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
         p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.DOWN; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
+        p1ExplosionRadius = 1;
+        p2ExplosionRadius = 1;
+
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
                 bombs[r][c] = null;
                 isExplosion[r][c] = false;
             }
         generateRandomMap();
-        placeRandomBonuses(3, 3);
         updateBonusesDisplay();
         updateBombs();
         updateExplosions();
