@@ -184,6 +184,13 @@ public class CaptureTheFlagController {
         resizeGridPane();
         
         if (winnerLabel != null) winnerLabel.setVisible(false);
+        
+        if (btnPauseMusic != null) btnPauseMusic.setOnAction(e -> onPauseMusic());
+        if (btnNextMusic != null) btnNextMusic.setOnAction(e -> onNextMusic());
+        if (btnRestartMusic != null) btnRestartMusic.setOnAction(e -> onRestartMusic());
+        
+        // Optionnel : joue une musique au lancement du jeu
+        MusicManager.playGameMusic();
     }
     
     private void generateCTFMap() {
@@ -510,6 +517,8 @@ public class CaptureTheFlagController {
     private void onBackMenu() {
         if (timerTimeline != null) timerTimeline.stop();
         BomberManApp.showMenu();
+        MusicManager.stopMusic();
+        BomberManApp.showMenu();
     }
     
     private void setupGridPaneResize() {
@@ -542,4 +551,25 @@ public class CaptureTheFlagController {
     private void openPersonnalisationPage() {
         // À compléter si tu veux la personnalisation
     }
+    
+    @FXML
+    private void onPauseMusic() {
+        if (MusicManager.isPaused()) {
+            MusicManager.resume();
+        } else {
+            MusicManager.pause();
+        }
+    }
+    
+    @FXML
+    private void onNextMusic() {
+        MusicManager.playNextGameMusic();
+    }
+    
+    @FXML
+    private void onRestartMusic() {
+        MusicManager.restart();
+    }
+    
+
 }
