@@ -13,7 +13,7 @@ public class PersonnalisationController {
     private static final String[] THEMES = {"Base", "Jungle", "Désert", "Backrooms"};
     private static final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "asset_backrooms"};
     private static final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
-    private static final String[] COLOR_KEYS = {"blanc", "rouge", "bleu", "noir", "jacob"};
+    private static final String[] COLOR_KEYS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
 
     private int indexJ1 = 0;
     private int indexJ2 = 1;
@@ -103,9 +103,9 @@ public class PersonnalisationController {
     }
 
     private Image getPlayerFaceImage(String colorKey) {
-        String path = "/personnages/" + colorKey + "/face.png";
+        String path = "/Personnages/" + colorKey + "/Face.png";
         java.net.URL url = getClass().getResource(path);
-        if (url == null) url = getClass().getResource("/personnages/blanc/face.png");
+        if (url == null) url = getClass().getResource("/Personnages/Blanc/Face.png");
         if (url == null) return new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9W5x3QAAAABJRU5ErkJggg==");
         return new Image(url.toString());
     }

@@ -849,7 +849,7 @@ public class GameController {
 
     private void openPersonnalisationPage() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Personnalisation.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Personnalisation.fxml"));
             Parent root = loader.load();
             PersonnalisationController persoController = loader.getController();
             Stage stage = (Stage) gridPane.getScene().getWindow();
