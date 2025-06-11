@@ -5,19 +5,25 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.ChoiceDialog;
 import javafx.stage.Stage;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
+/**
+ * Contrôleur du menu principal du jeu BomberMan.
+ * Gère le lancement des différents modes de jeu, la personnalisation, et la gestion de la musique du menu.
+ */
 public class MenuController {
+    /**
+     * Lance le mode 1v1 (deux joueurs humains).
+     */
     @FXML
     private void onPlay1v1() {
         BomberManApp.showGame(true);
     }
 
+    /**
+     * Ouvre une boîte de dialogue pour choisir la difficulté de l'IA,
+     * puis lance la partie contre l'IA avec la difficulté choisie.
+     */
     @FXML
     private void onPlayIA() {
         try {
@@ -46,22 +52,35 @@ public class MenuController {
         }
     }
 
+    /**
+     * Affiche un écran placeholder pour la personnalisation (fonctionnalité à venir).
+     */
     @FXML
     private void onCustom() {
         BomberManApp.showPlaceholder("Personnalisation à venir...");
     }
 
+    /**
+     * Quitte l'application proprement.
+     */
     @FXML
     private void onQuit() {
         System.exit(0);
     }
-    
+
+    /**
+     * Joue la musique du menu dès l'arrivée sur le menu principal.
+     */
     @FXML
-    public void initialize() {MusicManager.playMenuMusic();
+    public void initialize() {
+        MusicManager.playMenuMusic();
     }
-    
+
+    /**
+     * Lance le mode Capture The Flag.
+     */
     @FXML
     private void onPlayCTF() {
-        BomberManApp.showCTF(); // ou la méthode qui lance le mode Capture The Flag
+        BomberManApp.showCTF();
     }
 }

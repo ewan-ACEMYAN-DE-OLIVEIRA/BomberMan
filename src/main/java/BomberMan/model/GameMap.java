@@ -5,14 +5,34 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
 
+/**
+ * Représente la carte du jeu BomberMan.
+ * Permet de charger une carte à partir d'une ressource texte, de manipuler les tuiles,
+ * et de générer des murs cassables aléatoirement tout en respectant des zones interdites.
+ */
 public class GameMap {
+    /** Grille des tuiles de la carte. */
     private Tile[][] tiles;
-    private int width, height;
+    /** Largeur (nombre de colonnes) de la carte. */
+    private int width;
+    /** Hauteur (nombre de lignes) de la carte. */
+    private int height;
 
+    /**
+     * Charge et construit la carte à partir d'un fichier ressource.
+     * @param resourcePath Chemin de la ressource texte (ex: "/maps/map1.txt")
+     */
     public GameMap(String resourcePath) {
         loadMap(resourcePath);
     }
 
+    /**
+     * Charge le contenu de la map depuis le fichier ressource donné,
+     * et initialise la grille des tuiles.
+     * Les caractères '#' donnent des murs indestructibles,
+     * '.' des cases libres, '*' des murs cassables.
+     * @param resourcePath Chemin de la ressource à charger
+     */
     private void loadMap(String resourcePath) {
         try {
             InputStream is = getClass().getResourceAsStream(resourcePath);
@@ -43,7 +63,9 @@ public class GameMap {
     }
 
     /**
-     * Place aléatoirement des murs cassables sur la map, en évitant toutes les cases fournies dans forbiddenZones.
+     * Place aléatoirement des murs cassables sur la carte, en évitant toutes les cases fournies dans forbiddenZones.
+     * @param count Nombre de murs cassables à placer
+     * @param forbiddenZones Liste de positions interdites (chaque int[] représente {ligne, colonne})
      */
     public void generateRandomBreakables(int count, List<int[]> forbiddenZones) {
         Random rand = new Random();
@@ -69,16 +91,38 @@ public class GameMap {
         }
     }
 
+    /**
+     * Retourne la tuile en (row, col), ou un mur si hors de la carte.
+     * @param row Ligne demandée
+     * @param col Colonne demandée
+     * @return Tuile correspondante, ou WALL si hors limites
+     */
     public Tile getTile(int row, int col) {
         if (row < 0 || col < 0 || row >= height || col >= width) return Tile.WALL;
         return tiles[row][col];
     }
 
+    /**
+     * Modifie la tuile à la position donnée.
+     * Ne fait rien si la position est hors carte.
+     * @param row Ligne à modifier
+     * @param col Colonne à modifier
+     * @param tile Tuile à placer
+     */
     public void setTile(int row, int col, Tile tile) {
         if (row < 0 || col < 0 || row >= height || col >= width) return;
         tiles[row][col] = tile;
     }
 
+    /**
+     * Retourne la largeur de la carte (nombre de colonnes).
+     * @return Largeur (int)
+     */
     public int getWidth() { return width; }
+
+    /**
+     * Retourne la hauteur de la carte (nombre de lignes).
+     * @return Hauteur (int)
+     */
     public int getHeight() { return height; }
 }

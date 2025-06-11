@@ -21,7 +21,10 @@ import javafx.geometry.Pos;
 import javafx.util.Duration;
 
 import java.awt.Point;
-
+/**
+ * Contrôleur du mode "Capture The Flag" du jeu BomberMan.
+ * Gère l'affichage, la logique de jeu, les déplacements, la gestion des bombes, du score, du timer, des flags et des boutons musicaux.
+ */
 public class CaptureTheFlagController {
 
     @FXML private GridPane gridPane;
@@ -84,6 +87,14 @@ public class CaptureTheFlagController {
         }
     }
 
+    /**
+     * Initialise la scène CTF :
+     * - Charge les thèmes et images
+     * - Génère la grille de jeu, les joueurs, flags et murs
+     * - Met à jour le timer, les scores, l'affichage
+     * - Branche les boutons (menu, personnalisation, musique)
+     * - Démarre la musique de jeu
+     */
     @FXML
     public void initialize() {
         loadThemeAssets();
@@ -220,7 +231,11 @@ public class CaptureTheFlagController {
         // Optionnel : joue une musique au lancement du jeu
         MusicManager.playGameMusic();
     }
-    
+
+    /**
+     * Charge les assets (images) selon le thème choisi.
+     * Appelle loadAsset pour chaque image nécessaire au plateau.
+     */
     private void loadThemeAssets() {
         String folder = THEME_FOLDERS[themeIndex];
         pelouseImg      = loadAsset(folder, "pelouse.png");
@@ -230,7 +245,12 @@ public class CaptureTheFlagController {
         explosionImg    = loadAsset(folder, "explosion.png");
         flagImg         = safeLoad("/images/flag.png");
     }
-    
+
+    /**
+     * Génère aléatoirement la carte pour le mode CTF :
+     * - Place des murs indestructibles, des murs destructibles, de la pelouse
+     * - Libère les bases et les flags
+     */
     private void generateCTFMap() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -248,7 +268,10 @@ public class CaptureTheFlagController {
         map[flag1Pos.x][flag1Pos.y] = "pelouse";
         map[flag2Pos.x][flag2Pos.y] = "pelouse";
     }
-    
+
+    /**
+     * Met à jour l'affichage du plateau (fond, murs, pelouse, destructibles).
+     */
     private void drawBoard() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -262,7 +285,10 @@ public class CaptureTheFlagController {
             }
         }
     }
-    
+
+    /**
+     * Met à jour l'affichage des joueurs sur la grille.
+     */
     private void updatePlayersDisplay() {
         for (int r=0; r<rows; r++) for (int c=0; c<cols; c++) {
             cellPlayer1[r][c].setVisible(false);
@@ -273,7 +299,10 @@ public class CaptureTheFlagController {
         cellPlayer2[p2Pos.x][p2Pos.y].setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
         cellPlayer2[p2Pos.x][p2Pos.y].setVisible(true);
     }
-    
+
+    /**
+     * Met à jour la position et l'affichage des flags.
+     */
     private void updateFlags() {
         for (int r=0; r<rows; r++) for (int c=0; c<cols; c++) {
             cellFlags[r][c].setVisible(false);
@@ -288,7 +317,10 @@ public class CaptureTheFlagController {
             cellFlags[flag1Pos.x][flag1Pos.y].setVisible(true);
         }
     }
-    
+
+    /**
+     * Met à jour l'affichage des bombes sur la grille.
+     */
     private void updateBombs() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -297,7 +329,10 @@ public class CaptureTheFlagController {
                 if (has) cellBombs[r][c].setImage(bombImg);
             }
     }
-    
+
+    /**
+     * Met à jour l'affichage des explosions de bombes.
+     */
     private void updateExplosions() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -305,11 +340,20 @@ public class CaptureTheFlagController {
                 if (isExplosion[r][c]) cellExplosions[r][c].setImage(explosionImg);
             }
     }
-    
+
+    /**
+     * Vérifie si un point est dans les limites de la grille.
+     * @param p Point à tester
+     * @return true si le point est dans la map, false sinon
+     */
     private boolean inMap(Point p) {
         return p.x >= 0 && p.x < rows && p.y >= 0 && p.y < cols;
     }
-    
+
+    /**
+     * Affiche une popup de victoire pour le joueur donné et stoppe la partie.
+     * @param player 1 ou 2 (numéro du joueur vainqueur)
+     */
     private void showWinner(int player) {
         gameEnded = true;
         if (timerTimeline != null) timerTimeline.stop();
@@ -349,7 +393,13 @@ public class CaptureTheFlagController {
         
         dialog.show();
     }
-    
+
+    /**
+     * Indique si une case est accessible (pas de mur, bombe, ni un autre joueur).
+     * @param row Ligne
+     * @param col Colonne
+     * @return true si la case est libre pour marcher
+     */
     private boolean isWalkable(int row, int col) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
         if (!(map[row][col].equals("pelouse"))) return false;
@@ -357,7 +407,15 @@ public class CaptureTheFlagController {
         if ((row == p1Pos.x && col == p1Pos.y) || (row == p2Pos.x && col == p2Pos.y)) return false;
         return true;
     }
-    
+
+    /**
+     * Place une bombe sur la case indiquée pour le joueur (si autorisé).
+     * Lance un timer pour l'explosion.
+     * @param row Ligne
+     * @param col Colonne
+     * @param owner Numéro du joueur (1/2)
+     * @param radius Portée de la bombe
+     */
     private void placeBomb(int row, int col, int owner, int radius) {
         if (!map[row][col].equals("pelouse") || bombs[row][col] != null) return;
         if (owner == 1 && p1BombCount >= maxBombsPerPlayer) return;
@@ -370,7 +428,16 @@ public class CaptureTheFlagController {
         timeline.setCycleCount(1);
         timeline.play();
     }
-    
+
+    /**
+     * Gère l'explosion d'une bombe :
+     * - Affiche l'explosion
+     * - Tue les joueurs touchés
+     * - Détruit les murs destructibles touchés
+     * - Gère le respawn éventuel des joueurs et flags
+     * @param row Ligne de la bombe
+     * @param col Colonne de la bombe
+     */
     private void explodeBomb(int row, int col) {
         Bomb bomb = bombs[row][col];
         if (bomb == null) return;
@@ -444,7 +511,11 @@ public class CaptureTheFlagController {
         timeline.setCycleCount(1);
         timeline.play();
     }
-    
+
+    /**
+     * Gère les entrées clavier pour les déplacements, la pose de bombe, la prise et la capture du flag.
+     * @param event Evénement clavier reçu
+     */
     private void handleKeyPressed(KeyEvent event) {
         if (gameEnded) return;
         KeyCode code = event.getCode();
@@ -507,9 +578,13 @@ public class CaptureTheFlagController {
             placeBomb(p2Pos.x, p2Pos.y, 2, bombRadius);
         }
     }
-    
-    // Utilities
-    
+
+    /**
+     * Renvoie l'image du joueur selon sa couleur et direction.
+     * @param colorKey Couleur
+     * @param dir Direction (toujours Face pour ce mode)
+     * @return Image du joueur
+     */
     private Image getPlayerImage(String colorKey, Direction dir) {
         String path = "/Personnages/" + colorKey + "/Face.png";
         java.net.URL url = getClass().getResource(path);
@@ -520,7 +595,13 @@ public class CaptureTheFlagController {
         }
         return new Image(url.toString());
     }
-    
+
+    /**
+     * Charge une image à partir du chemin fourni.
+     * Si l'image est absente, retourne une image vide.
+     * @param path Chemin dans resources
+     * @return Image chargée ou image vide
+     */
     private Image safeLoad(String path) {
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
@@ -529,7 +610,13 @@ public class CaptureTheFlagController {
         }
         return new Image(url.toString());
     }
-    
+
+    /**
+     * Charge une image d'asset du dossier de thème ou du fallback asset_base.
+     * @param folder Dossier du thème
+     * @param file Nom du fichier image
+     * @return Image chargée, ou null si absente
+     */
     private Image loadAsset(String folder, String file) {
         String path = "/images/" + folder + "/" + file;
         java.net.URL url = getClass().getResource(path);
@@ -542,7 +629,10 @@ public class CaptureTheFlagController {
         }
         return new Image(url.toString());
     }
-    
+
+    /**
+     * Incrémente le timer et met à jour l'affichage du chrono.
+     */
     private void updateTimer() {
         elapsedSeconds++;
         int min = elapsedSeconds / 60;
@@ -550,7 +640,13 @@ public class CaptureTheFlagController {
         if (timerLabel != null)
             timerLabel.setText(String.format("%02d:%02d", min, sec));
     }
-    
+
+    /**
+     * Action retour au menu :
+     * - Arrête le timer
+     * - Coupe la musique
+     * - Affiche la scène du menu principal
+     */
     @FXML
     private void onBackMenu() {
         if (timerTimeline != null) timerTimeline.stop();
@@ -558,7 +654,10 @@ public class CaptureTheFlagController {
         MusicManager.stopMusic();
         BomberManApp.showMenu();
     }
-    
+
+    /**
+     * Prépare le redimensionnement dynamique de la grille selon la fenêtre.
+     */
     private void setupGridPaneResize() {
         gridPane.getColumnConstraints().clear();
         gridPane.getRowConstraints().clear();
@@ -575,7 +674,10 @@ public class CaptureTheFlagController {
             gridPane.getRowConstraints().add(rowConst);
         }
     }
-    
+
+    /**
+     * Redimensionne la grille pour qu'elle tienne dans l'espace central, avec cases carrées.
+     */
     private void resizeGridPane() {
         double paneW = gameCenterPane.getWidth();
         double paneH = gameCenterPane.getHeight();
@@ -586,11 +688,17 @@ public class CaptureTheFlagController {
         gridPane.setMaxHeight(cellSize * rows);
     }
 
+    /**
+     * Action bouton personnalisation : ouvre l'écran de personnalisation.
+     */
     @FXML
     private void onBtnPersoClick() {
         openPersonnalisationPage();
     }
 
+    /**
+     * Ouvre la fenêtre de personnalisation : passe le contexte et callbacks au contrôleur de personnalisation.
+     */
     private void openPersonnalisationPage() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/Personnalisation.fxml"));
@@ -622,7 +730,12 @@ public class CaptureTheFlagController {
             ex.printStackTrace();
         }
     }
-    
+
+
+    /**
+     * Action bouton pause/reprise musique.
+     * Utilise MusicManager.
+     */
     @FXML
     private void onPauseMusic() {
         if (MusicManager.isPaused()) {
@@ -631,12 +744,20 @@ public class CaptureTheFlagController {
             MusicManager.pause();
         }
     }
-    
+
+    /**
+     * Action bouton musique suivante.
+     * Utilise MusicManager.
+     */
     @FXML
     private void onNextMusic() {
         MusicManager.playNextGameMusic();
     }
-    
+
+    /**
+     * Action bouton restart musique.
+     * Utilise MusicManager.
+     */
     @FXML
     private void onRestartMusic() {
         MusicManager.restart();

@@ -27,6 +27,11 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import BomberMan.Direction;
 
+/**
+ * Contrôleur principal du jeu BomberMan (mode classique).
+ * Gère l'affichage, la logique de jeu, le timer, la gestion des bombes, les déplacements,
+ * la personnalisation, la musique, et les sons de bonus/malus.
+ */
 public class GameController {
     @FXML private GridPane gridPane;
     @FXML private Label timerLabel;
@@ -133,7 +138,16 @@ public class GameController {
             this.row = row; this.col = col; this.owner = owner; this.radius = radius;
         }
     }
-    
+
+    /**
+     * Initialise la scène de jeu :
+     * - Charge le thème et les assets.
+     * - Prépare la grille et les images.
+     * - Initialise les sons bonus/malus.
+     * - Branche les boutons de musique sur MusicManager.
+     * - Démarre la musique de jeu.
+     * - Démarre la boucle de timer.
+     */
     @FXML
     public void initialize() {
         loadThemeAssets();
@@ -263,8 +277,15 @@ public class GameController {
         gameCenterPane.heightProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         resizeGridPane();
     }
-    
-    
+
+
+    /**
+     * Prédit si une bombe posée à une case donnée pourrait toucher un joueur.
+     * @param bombR Ligne de la bombe
+     * @param bombC Colonne de la bombe
+     * @param radius Portée de la bombe
+     * @return true si un joueur peut être touché
+     */
     private boolean canHitPlayerWithBomb(int bombR, int bombC, int radius) {
         for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
             for (int dist = 1; dist <= radius; dist++) {
@@ -278,17 +299,21 @@ public class GameController {
         return false;
     }
 
+    /**
+     * Ouvre la page de personnalisation.
+     */
     @FXML
     private void onBtnPersoClick() {
         openPersonnalisationPage();
     }
 
-    // Prédit si une bombe ici casserait un mur qui sépare l'IA du joueur
+    /**
+     * Prédit si une bombe pourrait casser un mur qui sépare l'IA du joueur.
+     * @return true si un mur destructible sépare l'IA et le joueur dans la même ligne/colonne
+     */
     private boolean canDestroyWallTowardsPlayer() {
-        // Cherche direction du joueur
         int dr = Integer.compare(p1Row, p2Row);
         int dc = Integer.compare(p1Col, p2Col);
-        // S'il y a un mur destructible entre l'IA et le joueur dans une ligne ou colonne
         if (dr == 0 || dc == 0) {
             int r = p2Row, c = p2Col;
             for (int i = 1; i <= p2ExplosionRadius; i++) {
@@ -301,19 +326,23 @@ public class GameController {
         }
         return false;
     }
+
+    /**
+     * Redimensionne dynamiquement la grille pour l'adapter à la taille de la fenêtre.
+     */
     private void resizeGridPane() {
         double paneW = gameCenterPane.getWidth();
         double paneH = gameCenterPane.getHeight();
-
-        // Respecte le ratio cols/rows, cases carrées
         double cellSize = Math.min(paneW / cols, paneH / rows);
-
         gridPane.setPrefWidth(cellSize * cols);
         gridPane.setPrefHeight(cellSize * rows);
         gridPane.setMaxWidth(cellSize * cols);
         gridPane.setMaxHeight(cellSize * rows);
     }
 
+    /**
+     * Prépare le GridPane pour qu'il se redimensionne proprement.
+     */
     private void setupGridPaneResize() {
         gridPane.getColumnConstraints().clear();
         gridPane.getRowConstraints().clear();
@@ -331,6 +360,9 @@ public class GameController {
         }
     }
 
+    /**
+     * Charge tous les assets nécessaires au thème courant.
+     */
     private void loadThemeAssets() {
         String folder = THEME_FOLDERS[themeIndex];
         pelouseImg      = loadAsset(folder, "pelouse.png");
@@ -341,6 +373,12 @@ public class GameController {
         bonusImg = loadAsset(folder, "bonus.png");
     }
 
+    /**
+     * Charge une image d'asset, avec fallback sur asset_base si absente.
+     * @param folder Dossier du thème
+     * @param file Nom du fichier
+     * @return Image chargée ou image vide
+     */
     private Image loadAsset(String folder, String file) {
         String path = "/images/" + folder + "/" + file;
         java.net.URL url = getClass().getResource(path);
@@ -355,6 +393,11 @@ public class GameController {
         return new Image(url.toString());
     }
 
+    /**
+     * (Obsolète si tu utilises MusicManager)
+     * Joue la musique d'index donné dans la liste locale.
+     * @param index Index de la musique
+     */
     private void playMusic(int index) {
         try {
             if (mediaPlayer != null) mediaPlayer.stop();
@@ -376,10 +419,19 @@ public class GameController {
         }
     }
 
+    /**
+     * (Obsolète si tu utilises MusicManager)
+     * Passe à la musique suivante de la liste locale.
+     */
     private void playNextMusic() {
         currentMusicIndex = (currentMusicIndex + 1) % musicFiles.size();
         playMusic(currentMusicIndex);
     }
+
+    /**
+     * Déduit la direction entre deux cases.
+     * @return Direction ou null si non-voisin
+     */
     private Direction getDirection(int fromR, int fromC, int toR, int toC) {
         if (fromR == toR) {
             if (toC == fromC + 1) return Direction.DROITE;
@@ -391,6 +443,13 @@ public class GameController {
         }
         return null;
     }
+
+    /**
+     * Initialise une nouvelle partie, selon le mode (1v1 ou IA) et la difficulté.
+     * Réinitialise scores, positions, bombes, etc.
+     * @param is1v1 true pour duel humain, false pour IA
+     * @param difficulty Difficulté IA, ou null
+     */
     public void initGame(boolean is1v1, String difficulty) {
         scoreP1 = 0;
         scoreP2 = 0;
@@ -440,6 +499,9 @@ public class GameController {
         gridPane.requestFocus();
     }
 
+    /**
+     * Déplacement IA mode facile : aléatoire.
+     */
     private void iaRandomMove() {
         if (!isIaFacile || gameEnded || !p2Alive) return;
 
@@ -480,6 +542,11 @@ public class GameController {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
         }
     }
+
+    /**
+     * Retourne l'ensemble des cases dangereuses (touchées par une explosion imminente).
+     * @return Set de "row,col"
+     */
     private Set<String> getDangerCells() {
         Set<String> dangerCells = new HashSet<>();
         for (int r = 0; r < rows; r++) {
@@ -503,6 +570,10 @@ public class GameController {
         }
         return dangerCells;
     }
+
+    /**
+     * Déplacement IA mode normal : évite les dangers, pose des bombes de façon opportuniste.
+     */
     private void iaSmartMove() {
         if (!isIaNormal || gameEnded || !p2Alive) return;
 
@@ -600,6 +671,10 @@ public class GameController {
             iaBombCooldown = 10; // par exemple, 8 cycles de Timeline (si Timeline à 0.1s, ça fait 0.8s)
         }
     }
+
+    /**
+     * Met à jour l'affichage des bonus/malus sur la grille.
+     */
     private void updateBonusesDisplay() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -610,15 +685,16 @@ public class GameController {
                 }
             }
     }
+
+    /**
+     * Déplacement IA mode difficile : pathfinding, pose intelligente, évitement, etc.
+     */
     private void iaDifficileMove() {
         if (!isIaDifficile || gameEnded || !p2Alive) return;
 
         Set<String> dangerCells = getDangerCells();
         boolean inDanger = dangerCells.contains(p2Row + "," + p2Col);
-
-        // --- 1. FUITE INTELLIGENTE SI EN DANGER ---
         if (inDanger) {
-            // Cherche la case sûre la plus proche (BFS)
             boolean[][] visited = new boolean[rows][cols];
             Queue<int[]> queue = new ArrayDeque<>();
             queue.add(new int[]{p2Row, p2Col, 0});
@@ -644,7 +720,6 @@ public class GameController {
                 }
             }
             if (goal != null && (goal[0] != p2Row || goal[1] != p2Col)) {
-                // Revenir au premier pas vers la case safe
                 int cr = goal[0], cc = goal[1];
                 while (parent.containsKey(cr + "," + cc) && !(parent.get(cr + "," + cc)[0] == p2Row && parent.get(cr + "," + cc)[1] == p2Col)) {
                     int[] p = parent.get(cr + "," + cc);
@@ -658,11 +733,9 @@ public class GameController {
                 }
                 return;
             }
-            // Sinon, reste sur place (bloqué)
             return;
         }
 
-        // --- 2. RAMASSE BONUS/MALUS ---
         if (map[p2Row][p2Col].equals("bonus_range")) {
             p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
             if (bonusSound != null) bonusSound.play();
@@ -675,7 +748,6 @@ public class GameController {
             updateBonusesDisplay();
         }
 
-        // --- 3. SI JOUEUR ACCESSIBLE DIRECTEMENT : POSE UNE BOMBE ---
         if (canHitPlayerWithBomb(p2Row, p2Col, p2ExplosionRadius)) {
             if (bombs[p2Row][p2Col] == null && p2BombCount < 2 && !dangerCells.contains(p2Row + "," + p2Col)) {
                 placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
@@ -683,7 +755,6 @@ public class GameController {
             }
         }
 
-        // --- 4. SI MUR DESTRUCTIBLE SEPARE IA ET JOUEUR : POSE UNE BOMBE ---
         if (canDestroyWallTowardsPlayer()) {
             if (bombs[p2Row][p2Col] == null && p2BombCount < 2 && !dangerCells.contains(p2Row + "," + p2Col)) {
                 placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
@@ -691,7 +762,6 @@ public class GameController {
             }
         }
 
-        // --- 5. SE RAPPROCHER DU JOUEUR VIA LE PLUS COURT CHEMIN (EN EVITANT LES DANGERS) ---
         int[] target = {p1Row, p1Col};
         int[][] dist = new int[rows][cols];
         for (int[] row : dist) Arrays.fill(row, -1);
@@ -704,7 +774,6 @@ public class GameController {
             int[] cell = queue.poll();
             int r = cell[0], c = cell[1];
             if (r == target[0] && c == target[1]) {
-                // On a trouvé un chemin jusqu'au joueur
                 nextStep = cell;
                 break;
             }
@@ -719,7 +788,6 @@ public class GameController {
             }
         }
         if (nextStep != null) {
-            // Revenir au premier pas
             int cr = nextStep[0], cc = nextStep[1];
             while (parent.containsKey(cr + "," + cc) && !(parent.get(cr + "," + cc)[0] == p2Row && parent.get(cr + "," + cc)[1] == p2Col)) {
                 int[] p = parent.get(cr + "," + cc);
@@ -734,7 +802,6 @@ public class GameController {
             }
         }
 
-        // --- 6. Si pas d'action possible, casser des murs pour explorer ---
         boolean foundDestructible = false;
         boolean[][] visited = new boolean[rows][cols];
         Queue<int[]> queue2 = new ArrayDeque<>();
@@ -746,19 +813,16 @@ public class GameController {
         while (!queue2.isEmpty() && !foundDestructible) {
             int[] cell = queue2.poll();
             int r = cell[0], c = cell[1];
-            // Cherche autour si un mur destructible est à portée de bombe
             for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
                 for (int dist2 = 1; dist2 <= p2ExplosionRadius; dist2++) {
                     int nr = r + dir[0]*dist2, nc = c + dir[1]*dist2;
                     if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) break;
                     if (map[nr][nc].equals("wall")) break;
                     if (map[nr][nc].equals("destructible")) {
-                        // Si IA est déjà à la bonne position, pose une bombe !
                         if (r == p2Row && c == p2Col && bombs[p2Row][p2Col] == null && p2BombCount < 2) {
                             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
                             return;
                         }
-                        // Sinon, on va essayer d'atteindre ce point
                         destructibleCell = cell;
                         foundDestructible = true;
                         break;
@@ -766,7 +830,6 @@ public class GameController {
                 }
                 if (foundDestructible) break;
             }
-            // Parcours en largeur pour atteindre une case d'où l'on pourra casser un mur
             for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
                 int nr = r + dir[0], nc = c + dir[1];
                 if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
@@ -777,7 +840,6 @@ public class GameController {
                 }
             }
         }
-        // Si on a trouvé une case d'où casser un mur, on y va
         if (destructibleCell != null && (destructibleCell[0] != p2Row || destructibleCell[1] != p2Col)) {
             int cr = destructibleCell[0], cc = destructibleCell[1];
             while (parent2.containsKey(cr + "," + cc) && !(parent2.get(cr + "," + cc)[0] == p2Row && parent2.get(cr + "," + cc)[1] == p2Col)) {
@@ -793,7 +855,6 @@ public class GameController {
             }
         }
 
-        // --- 7. SINON, DEPLACEMENT RANDOM ---
         List<Direction> directions = Arrays.asList(Direction.FACE, Direction.DOS, Direction.GAUCHE, Direction.DROITE);
         Collections.shuffle(directions, aiRandom);
         for (Direction dir : directions) {
@@ -812,8 +873,11 @@ public class GameController {
                 return;
             }
         }
-        // Sinon, reste sur place
     }
+
+    /**
+     * Génère une nouvelle map aléatoire (murs, pelouse, destructibles).
+     */
     private void generateRandomMap() {
         Random rand = new Random();
         int[][] joueurs = {{1, 1}, {rows - 2, cols - 2}};
@@ -836,6 +900,9 @@ public class GameController {
         drawBoard();
     }
 
+    /**
+     * Met à jour l'affichage du plateau (images de fond).
+     */
     private void drawBoard() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -849,6 +916,9 @@ public class GameController {
             }
     }
 
+    /**
+     * Met à jour l'affichage des bombes sur la grille.
+     */
     private void updateBombs() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -858,6 +928,9 @@ public class GameController {
             }
     }
 
+    /**
+     * Met à jour l'affichage des explosions sur la grille.
+     */
     private void updateExplosions() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -866,6 +939,9 @@ public class GameController {
             }
     }
 
+    /**
+     * Met à jour l'affichage des joueurs sur la grille.
+     */
     private void updatePlayersDisplay() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -882,6 +958,12 @@ public class GameController {
         }
     }
 
+    /**
+     * Récupère l'image du joueur selon sa couleur et direction.
+     * @param colorKey Couleur
+     * @param dir Direction
+     * @return Image
+     */
     private Image getPlayerImage(String colorKey, Direction dir) {
         String suffix;
         switch (dir) {
@@ -903,6 +985,11 @@ public class GameController {
         return new Image(url.toString());
     }
 
+    /**
+     * Gère les entrées clavier pour déplacement, pose bombe, prise bonus/malus.
+     * Joue les sons de bonus/malus.
+     * @param event Événement clavier
+     */
     private void handleKeyPressed(KeyEvent event) {
         if (gameEnded) return;
         if (!p1Alive && !p2Alive) return;
@@ -979,6 +1066,13 @@ public class GameController {
         }
     }
 
+    /**
+     * Indique si une case est accessible pour un joueur donné.
+     * @param row Ligne
+     * @param col Colonne
+     * @param playerNum Numéro du joueur (1 ou 2)
+     * @return true si la case est libre
+     */
     private boolean isWalkable(int row, int col, int playerNum) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
         if (!(map[row][col].equals("pelouse") || map[row][col].equals("bonus_range") || map[row][col].equals("malus_range"))) return false;
@@ -988,6 +1082,13 @@ public class GameController {
         return true;
     }
 
+    /**
+     * Pose une bombe sur la case donnée pour le joueur donné (si possible).
+     * @param row Ligne
+     * @param col Colonne
+     * @param owner Numéro du joueur
+     * @param radius Portée de la bombe
+     */
     private void placeBomb(int row, int col, int owner, int radius) {
         if (!map[row][col].equals("pelouse") || bombs[row][col] != null) return;
         if (owner == 1 && p1BombCount >= 2) return;
@@ -1001,6 +1102,12 @@ public class GameController {
         timeline.play();
     }
 
+
+    /**
+     * Déclenche l'explosion d'une bombe, applique les effets sur la grille et les joueurs.
+     * @param row Ligne
+     * @param col Colonne
+     */
     private void explodeBomb(int row, int col) {
         Bomb bomb = bombs[row][col];
         if (bomb == null) return;
@@ -1067,6 +1174,9 @@ public class GameController {
         timeline.play();
     }
 
+    /**
+     * Relance un round sans remettre les scores à zéro.
+     */
     private void restartRound() {
         p1Row = 1; p1Col = 1; p1Dir = Direction.FACE; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
         p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.FACE; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
@@ -1086,6 +1196,10 @@ public class GameController {
         gridPane.requestFocus();
     }
 
+    /**
+     * Affiche une popup de victoire pour le joueur gagnant.
+     * @param player 1 ou 2
+     */
     private void showWinner(int player) {
         gameEnded = true;
         if (timerTimeline != null) timerTimeline.stop();
@@ -1122,6 +1236,9 @@ public class GameController {
         dialog.show();
     }
 
+    /**
+     * Ouvre la fenêtre de personnalisation de l'apparence et du thème.
+     */
     private void openPersonnalisationPage() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/Personnalisation.fxml"));
@@ -1154,6 +1271,11 @@ public class GameController {
         }
     }
 
+    /**
+     * Récupère l'image de prévisualisation d'un thème.
+     * @param themeFolder Dossier du thème
+     * @return Image
+     */
     private Image getThemePreviewImage(String themeFolder) {
         String path = "/images/" + themeFolder + "/map.png";
         java.net.URL url = getClass().getResource(path);
@@ -1168,6 +1290,9 @@ public class GameController {
         return new Image(url.toString());
     }
 
+    /**
+     * Incrémente le timer et met à jour l'affichage du chronomètre.
+     */
     private void updateTimer() {
         elapsedSeconds++;
         int min = elapsedSeconds / 60;
@@ -1176,6 +1301,11 @@ public class GameController {
             timerLabel.setText(String.format("%02d:%02d", min, sec));
     }
 
+    /**
+     * Ajoute des points à un joueur et met à jour le label de score.
+     * @param player 1 ou 2
+     * @param points Points à ajouter
+     */
     private void addScore(int player, int points) {
         if (player == 1) {
             scoreP1 += points;
@@ -1185,7 +1315,10 @@ public class GameController {
             if (scoreP2Label != null) scoreP2Label.setText(String.valueOf(scoreP2));
         }
     }
-    
+
+    /**
+     * Action bouton retour menu : stoppe le timer, joue la musique du menu, affiche le menu.
+     */
     @FXML
     private void onBackMenu() {
         if (timerTimeline != null) timerTimeline.stop();
