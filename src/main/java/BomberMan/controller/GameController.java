@@ -1062,4 +1062,5 @@ public class GameController {
         if (timerTimeline != null) timerTimeline.stop();
         BomberManApp.showMenu();
     }
+    
 }
