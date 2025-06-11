@@ -1,8 +1,4 @@
-à savoir 
-
-sur les bombes : elles explosent au bout de quelques seconde , sauf si elles sont touchées par l'explosion d'une autre bombe elles explosent au même moment. Une fois posée une bombe agit comme un mur.
-
-sur les bonus : un bonus permet de poser plus de bombes que d'habitude (de base on peut poser uniquement 2 bombes)
-
-                un bonus permet de d'augmenter la range des bombes
-
+Nous avons opté pour cette architecture car il permet une bonne séparation du code métier, des controllers et de la partie Design. Les Controller gèrent la logique du jeu et les méthodes nécessaires au bon fonctionnement du jeu. 
+Les Classes Bomb, Player... gèrent chacune leurs propres domauines. 
+De plus en utilisant des énumérations, nousa vons la possibilité de modifier à tout moment plus simplement et d'ajouter de nouveaux types sans devoir modifier la logique des méthodes nécessaires au fonctionnement du jeu.
+Nous avons également opté pour des noms de méthodes trèès sémantiques, ce qui permet au premier coup d'oeil de comprendre l'utilité de la méthode. Avec la Javadoc, cela apporte une clareté supplémentaire.
