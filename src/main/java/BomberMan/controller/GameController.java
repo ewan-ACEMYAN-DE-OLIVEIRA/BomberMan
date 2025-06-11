@@ -117,7 +117,8 @@ public class GameController {
             "/Musique/background11.mp3",
             "/Musique/background12.mp3",
             "/Musique/background13.mp3",
-            "/Musique/background14.mp3"
+            "/Musique/background14.mp3",
+            "/Musique/background16.mp3"
     );
     private int currentMusicIndex = 0;
     private MediaPlayer mediaPlayer;

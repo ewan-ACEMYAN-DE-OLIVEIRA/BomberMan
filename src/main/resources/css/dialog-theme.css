@@ -1,0 +1,24 @@
+.menu-button {
+    -fx-background-color: linear-gradient(to bottom, #ffe066, #ffbe0b);
+    -fx-background-radius: 14;
+    -fx-text-fill: #222;
+    -fx-font-size: 18;
+    -fx-font-weight: bold;
+    -fx-padding: 10 32 10 32; /* ← moins haut et moins large */
+    -fx-border-width: 2;
+    -fx-border-radius: 14;
+    -fx-border-color: #ffbe0b;
+    -fx-effect: dropshadow(gaussian, #00000044, 6, 0.3, 0, 2);
+    -fx-cursor: hand;
+    -fx-transition: background-color 0.2s;
+}
+.menu-button:hover, .menu-button:focused {
+    -fx-background-color: linear-gradient(to bottom, #ffd500, #ffbe0b);
+    -fx-text-fill: #000;
+}
+.selected-diff {
+    -fx-border-color: #ffbe0b;
+    -fx-border-width: 3;
+    -fx-background-color: linear-gradient(to bottom, #fff7ae, #ffe066);
+    -fx-text-fill: #222;
+}
