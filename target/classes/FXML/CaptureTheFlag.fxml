@@ -54,7 +54,7 @@
             </Button>
             <!-- ESPACEUR pour pousser le bouton à droite -->
             <Region fx:id="spacer" HBox.hgrow="ALWAYS" />
-            <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" style="-fx-font-size:18px"/>
+            <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" style="-fx-font-size:18px" onAction="#onBtnPersoClick"/>
         </HBox>
     </bottom>
 </BorderPane>
