@@ -12,7 +12,11 @@
            stylesheets="@/css/menu.css">
     <!-- Menu au-dessus de l'image de fond -->
     <VBox alignment="CENTER" spacing="18" styleClass="menu-background">
-        <Text text="SUPER&#10;BOMBERMAN" styleClass="menu-title"/>
+        <ImageView fx:id="logoImage" fitWidth="300" preserveRatio="true">
+            <image>
+                <Image url="@/images/logo.png"/>
+            </image>
+        </ImageView>
         <Button text="Jouer 1v1" onAction="#onPlay1v1"/>
         <Button text="Jouer contre l'IA" onAction="#onPlayIA"/>
         <Button text="Mode Capture the Flag" onAction="#onPlayCTF"/>
