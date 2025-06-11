@@ -18,8 +18,8 @@ public class GameModel {
 
 
 
-    private Direction player1Direction = Direction.DOWN;
-    private Direction player2Direction = Direction.DOWN;
+    private Direction player1Direction = Direction.FACE;
+    private Direction player2Direction = Direction.FACE;
 
     public Direction getPlayer1Direction() { return player1Direction; }
     public Direction getPlayer2Direction() { return player2Direction; }
@@ -95,8 +95,8 @@ public class GameModel {
         bombRange2 = 1;
         bombUnderPlayer1 = false;
         bombUnderPlayer2 = false;
-        player1Direction = Direction.DOWN;
-        player2Direction = Direction.DOWN;
+        player1Direction = Direction.FACE;
+        player2Direction = Direction.FACE;
     }
 
     private boolean isProtectedSpawnZone(int row, int col) {
@@ -167,10 +167,10 @@ public class GameModel {
     public boolean isPlayer2Alive() { return player2Alive; }
 
     public boolean movePlayer1(int dRow, int dCol) {
-        if (dRow == -1) player1Direction = Direction.UP;
-        else if (dRow == 1) player1Direction = Direction.DOWN;
-        else if (dCol == -1) player1Direction = Direction.LEFT;
-        else if (dCol == 1) player1Direction = Direction.RIGHT;
+        if (dRow == -1) player1Direction = Direction.DOS;
+        else if (dRow == 1) player1Direction = Direction.FACE;
+        else if (dCol == -1) player1Direction = Direction.GAUCHE;
+        else if (dCol == 1) player1Direction = Direction.DROITE;
 
         int curRow = player1Row;
         int curCol = player1Col;
@@ -201,10 +201,10 @@ public class GameModel {
     }
 
     public boolean movePlayer2(int dRow, int dCol) {
-        if (dRow == -1) player2Direction = Direction.UP;
-        else if (dRow == 1) player2Direction = Direction.DOWN;
-        else if (dCol == -1) player2Direction = Direction.LEFT;
-        else if (dCol == 1) player2Direction = Direction.RIGHT;
+        if (dRow == -1) player2Direction = Direction.DOS;
+        else if (dRow == 1) player2Direction = Direction.FACE;
+        else if (dCol == -1) player2Direction = Direction.GAUCHE;
+        else if (dCol == 1) player2Direction = Direction.DROITE;
 
         int curRow = player2Row;
         int curCol = player2Col;

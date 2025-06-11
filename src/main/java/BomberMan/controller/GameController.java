@@ -28,28 +28,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import BomberMan.Direction;
 
 public class GameController {
-    @FXML
-    private GridPane gridPane;
-    @FXML
-    private HBox topBar;
-    @FXML
-    private Label timerLabel;
-    @FXML
-    private Label scoreP1Label;
-    @FXML
-    private Label scoreP2Label;
-    @FXML
-    private Button backMenuButton;
-    @FXML
-    private ImageView p1Icon;
-    @FXML
-    private ImageView p2Icon;
-    @FXML
-    private HBox bottomBar;
-    @FXML
-    private Button btnPerso;
-    @FXML
-    private StackPane gameCenterPane;
+    @FXML private GridPane gridPane;
+    @FXML private HBox topBar;
+    @FXML private Label timerLabel;
+    @FXML private Label scoreP1Label;
+    @FXML private Label scoreP2Label;
+    @FXML private Button backMenuButton;
+    @FXML private ImageView p1Icon;
+    @FXML private ImageView p2Icon;
+    @FXML private HBox bottomBar;
+    @FXML private Button btnPerso;
+    @FXML private StackPane gameCenterPane;
+    @FXML private Button btnRestartMusic;
+    @FXML private ImageView restartIcon;
+    @FXML private Button btnPauseMusic;
+    @FXML private Button btnNextMusic;
+    @FXML private ImageView pauseIcon;
+    @FXML private ImageView nextIcon;
 
     private final int rows = 13, cols = 15;
     private final int cellSize = 40;
@@ -61,12 +56,10 @@ public class GameController {
     private Image bonusImg;
     private ImageView[][] cellBonuses = new ImageView[rows][cols];
 
-    // Personnalisation couleurs des joueurs
     private final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
     private int indexJ1 = 0;
     private int indexJ2 = 1;
 
-    // Personnalisation thème de la map
     private final String[] THEMES = {"Base", "Jungle", "Désert", "Backrooms"};
     private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "asset_backrooms"};
     private int themeIndex = 0;
@@ -78,10 +71,8 @@ public class GameController {
     private ImageView[][] cellPlayer1     = new ImageView[rows][cols];
     private ImageView[][] cellPlayer2     = new ImageView[rows][cols];
 
-    //son bonus
     private AudioClip bonusSound;
 
-    //ia
     private String iaDifficulty = null;
     private boolean isIaFacile = false;
     private boolean isIaNormal = false;
@@ -90,16 +81,15 @@ public class GameController {
     private Timeline iaTimeline;
     private int iaBombCooldown = 0;
 
-
     private int p1Row = 1, p1Col = 1;
-    private Direction p1Dir = Direction.DOWN;
+    private Direction p1Dir = Direction.FACE;
     private int p1BombCount = 0;
     private int p1ExplosionRadius = 1;
     private int scoreP1 = 0;
     private boolean p1Alive = true;
 
     private int p2Row = rows - 2, p2Col = cols - 2;
-    private Direction p2Dir = Direction.DOWN;
+    private Direction p2Dir = Direction.FACE;
     private int p2BombCount = 0;
     private int p2ExplosionRadius = 1;
     private int scoreP2 = 0;
@@ -110,19 +100,7 @@ public class GameController {
 
     private boolean gameEnded = false;
 
-    private Scene gameScene; // pour revenir à la scène de jeu d'origine
-    @FXML
-    private Button btnRestartMusic;
-    @FXML
-    private ImageView restartIcon;
-    @FXML
-    private Button btnPauseMusic;
-    @FXML
-    private Button btnNextMusic;
-    @FXML
-    private ImageView pauseIcon;
-    @FXML
-    private ImageView nextIcon;
+    private Scene gameScene;
 
     private List<String> musicFiles = Arrays.asList(
             "/Musique/background1.mp3",
@@ -158,8 +136,8 @@ public class GameController {
         loadThemeAssets();
         setupGridPaneResize();
 
-        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
-        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
+        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.FACE));
+        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
 
         gridPane.getChildren().clear();
         for (int r = 0; r < rows; r++) {
@@ -176,7 +154,6 @@ public class GameController {
                 ImageView p2    = new ImageView();
                 ImageView bonus = new ImageView();
 
-                // Bind la taille de chaque image à la taille de la cellule
                 for (ImageView img : new ImageView[]{bg, expl, bomb, p1, p2, bonus}) {
                     img.fitWidthProperty().bind(cell.widthProperty());
                     img.fitHeightProperty().bind(cell.heightProperty());
@@ -201,6 +178,7 @@ public class GameController {
                 gridPane.add(cell, c, r);
             }
         }
+
         generateRandomMap();
         updateBombs();
         updateExplosions();
@@ -277,11 +255,14 @@ public class GameController {
         resizeGridPane();
     }
 
+    @FXML
+    private void onBtnPersoClick() {
+        openPersonnalisationPage();
+    }
+
     private void resizeGridPane() {
         double paneW = gameCenterPane.getWidth();
         double paneH = gameCenterPane.getHeight();
-
-        // Respecte le ratio cols/rows, cases carrées
         double cellSize = Math.min(paneW / cols, paneH / rows);
 
         gridPane.setPrefWidth(cellSize * cols);
@@ -343,7 +324,7 @@ public class GameController {
             mediaPlayer = new MediaPlayer(media);
             mediaPlayer.setOnEndOfMedia(this::playNextMusic);
             mediaPlayer.play();
-            isMusicPaused = false; // ← On remet l'état à "en lecture"
+            isMusicPaused = false;
             if (pauseIcon != null)
                 pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
         } catch (Exception e) {
@@ -364,8 +345,8 @@ public class GameController {
         isIaFacile = !is1v1 && "Facile".equalsIgnoreCase(difficulty);
         isIaNormal = !is1v1 && "Normal".equalsIgnoreCase(difficulty);
         isIaDifficile = !is1v1 && "Difficile".equalsIgnoreCase(difficulty);
-        p1Row = 1; p1Col = 1; p1Dir = Direction.DOWN; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
-        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.DOWN; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
+        p1Row = 1; p1Col = 1; p1Dir = Direction.FACE; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
+        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.FACE; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
 
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -388,12 +369,12 @@ public class GameController {
         if (iaTimeline != null) iaTimeline.stop();
 
         if (isIaFacile) {
-            iaTimeline = new Timeline(new KeyFrame(Duration.seconds(1.2), e -> iaRandomMove())); // <- ralentis ici
+            iaTimeline = new Timeline(new KeyFrame(Duration.seconds(1.2), e -> iaRandomMove()));
             iaTimeline.setCycleCount(Timeline.INDEFINITE);
             iaTimeline.play();
         }
         if (isIaNormal) {
-            iaTimeline = new Timeline(new KeyFrame(Duration.seconds(0.4), e -> iaSmartMove())); // même lenteur, tu peux ajuster
+            iaTimeline = new Timeline(new KeyFrame(Duration.seconds(0.4), e -> iaSmartMove()));
             iaTimeline.setCycleCount(Timeline.INDEFINITE);
             iaTimeline.play();
         }
@@ -403,24 +384,22 @@ public class GameController {
     private void iaRandomMove() {
         if (!isIaFacile || gameEnded || !p2Alive) return;
 
-        List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+        List<Direction> directions = Arrays.asList(Direction.DOS, Direction.FACE, Direction.GAUCHE, Direction.DROITE);
         Collections.shuffle(directions, aiRandom);
 
-        // Essaye chaque direction aléatoirement, s'arrête dès que ça bouge
         for (Direction dir : directions) {
             int newRow = p2Row, newCol = p2Col;
             switch (dir) {
-                case UP:    newRow--; break;
-                case DOWN:  newRow++; break;
-                case LEFT:  newCol--; break;
-                case RIGHT: newCol++; break;
+                case DOS:    newRow--; break;
+                case FACE:  newRow++; break;
+                case GAUCHE:  newCol--; break;
+                case DROITE: newCol++; break;
             }
             if (isWalkable(newRow, newCol, 2)) {
                 p2Row = newRow;
                 p2Col = newCol;
                 p2Dir = dir;
                 updatePlayersDisplay();
-                // Ramasse bonus/malus si présent
                 if (map[p2Row][p2Col].equals("bonus_range")) {
                     p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
                     if (bonusSound != null) bonusSound.play();
@@ -434,20 +413,18 @@ public class GameController {
                 break;
             }
         }
-        // Petite chance de poser une bombe
         if (aiRandom.nextDouble() < 0.25) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
         }
     }
+
     private Set<String> getDangerCells() {
         Set<String> dangerCells = new HashSet<>();
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 Bomb bomb = bombs[r][c];
                 if (bomb != null) {
-                    // Ajoute la case de la bombe
                     dangerCells.add(r + "," + c);
-                    // Ajoute les cases touchées par l'explosion
                     for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
                         for (int dist = 1; dist <= bomb.radius; dist++) {
                             int nr = r + dir[0]*dist, nc = c + dir[1]*dist;
@@ -462,6 +439,7 @@ public class GameController {
         }
         return dangerCells;
     }
+
     private void iaSmartMove() {
         if (!isIaNormal || gameEnded || !p2Alive) return;
 
@@ -469,19 +447,17 @@ public class GameController {
         boolean inDanger = dangerCells.contains(p2Row + "," + p2Col);
 
         if (inDanger) {
-            // Cherche toutes les directions où fuir
-            List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+            List<Direction> directions = Arrays.asList(Direction.DOS, Direction.FACE, Direction.GAUCHE, Direction.DROITE);
             Collections.shuffle(directions, aiRandom);
 
             boolean movedToSafe = false;
-            // 1. Essayer d'aller sur une case walkable ET non dangereuse
             for (Direction dir : directions) {
                 int newRow = p2Row, newCol = p2Col;
                 switch (dir) {
-                    case UP:    newRow--; break;
-                    case DOWN:  newRow++; break;
-                    case LEFT:  newCol--; break;
-                    case RIGHT: newCol++; break;
+                    case DOS:    newRow--; break;
+                    case FACE:  newRow++; break;
+                    case GAUCHE:  newCol--; break;
+                    case DROITE: newCol++; break;
                 }
                 if (isWalkable(newRow, newCol, 2) && !dangerCells.contains(newRow + "," + newCol)) {
                     p2Row = newRow;
@@ -492,15 +468,14 @@ public class GameController {
                     break;
                 }
             }
-            // 2. Si aucune case safe dispo, bouger vers n'importe quelle case walkable (même si dangereuse)
             if (!movedToSafe) {
                 for (Direction dir : directions) {
                     int newRow = p2Row, newCol = p2Col;
                     switch (dir) {
-                        case UP:    newRow--; break;
-                        case DOWN:  newRow++; break;
-                        case LEFT:  newCol--; break;
-                        case RIGHT: newCol++; break;
+                        case DOS:    newRow--; break;
+                        case FACE:  newRow++; break;
+                        case GAUCHE:  newCol--; break;
+                        case DROITE: newCol++; break;
                     }
                     if (isWalkable(newRow, newCol, 2)) {
                         p2Row = newRow;
@@ -512,17 +487,16 @@ public class GameController {
                 }
             }
         } else {
-            // S'il n'est pas en danger, déplacement aléatoire
-            List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+            List<Direction> directions = Arrays.asList(Direction.DOS, Direction.FACE, Direction.GAUCHE, Direction.DROITE);
             Collections.shuffle(directions, aiRandom);
 
             for (Direction dir : directions) {
                 int newRow = p2Row, newCol = p2Col;
                 switch (dir) {
-                    case UP:    newRow--; break;
-                    case DOWN:  newRow++; break;
-                    case LEFT:  newCol--; break;
-                    case RIGHT: newCol++; break;
+                    case DOS:    newRow--; break;
+                    case FACE:  newRow++; break;
+                    case GAUCHE:  newCol--; break;
+                    case DROITE: newCol++; break;
                 }
                 if (isWalkable(newRow, newCol, 2)) {
                     p2Row = newRow;
@@ -534,7 +508,6 @@ public class GameController {
             }
         }
 
-        // Ramasse bonus/malus si présent
         if (map[p2Row][p2Col].equals("bonus_range")) {
             p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
             if (bonusSound != null) bonusSound.play();
@@ -546,18 +519,17 @@ public class GameController {
             updateBonusesDisplay();
         }
 
-        // Petite chance de poser une bombe, mais NE POSE PAS si tu es déjà sur une bombe !
         if (aiRandom.nextDouble() < 0.25 && bombs[p2Row][p2Col] == null) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
         }
         if (iaBombCooldown > 0) iaBombCooldown--;
 
-// ... et pour poser une bombe :
         if (iaBombCooldown == 0 && aiRandom.nextDouble() < 0.25 && bombs[p2Row][p2Col] == null && !getDangerCells().contains(p2Row + "," + p2Col)) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
-            iaBombCooldown = 10; // par exemple, 8 cycles de Timeline (si Timeline à 0.1s, ça fait 0.8s)
+            iaBombCooldown = 10;
         }
     }
+
     private void updateBonusesDisplay() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -640,9 +612,9 @@ public class GameController {
     private Image getPlayerImage(String colorKey, Direction dir) {
         String suffix;
         switch (dir) {
-            case UP:    suffix = "Dos"; break;
-            case LEFT:  suffix = "Gauche"; break;
-            case RIGHT: suffix = "Droite"; break;
+            case DOS:    suffix = "Dos"; break;
+            case GAUCHE:  suffix = "Gauche"; break;
+            case DROITE: suffix = "Droite"; break;
             default:    suffix = "Face"; break;
         }
         String path = "/Personnages/" + colorKey + "/" + suffix + ".png";
@@ -821,8 +793,8 @@ public class GameController {
     }
 
     private void restartRound() {
-        p1Row = 1; p1Col = 1; p1Dir = Direction.DOWN; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
-        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.DOWN; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
+        p1Row = 1; p1Col = 1; p1Dir = Direction.FACE; p1BombCount = 0; p1ExplosionRadius = 1; p1Alive = true;
+        p2Row = rows - 2; p2Col = cols - 2; p2Dir = Direction.FACE; p2BombCount = 0; p2ExplosionRadius = 1; p2Alive = true;
         p1ExplosionRadius = 1;
         p2ExplosionRadius = 1;
 
@@ -856,9 +828,9 @@ public class GameController {
 
         ImageView winnerImg;
         if (player == 1) {
-            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
+            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ1], Direction.FACE));
         } else {
-            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
+            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ2], Direction.FACE));
         }
         winnerImg.setFitHeight(80); winnerImg.setFitWidth(80);
 
@@ -884,7 +856,7 @@ public class GameController {
 
             persoController.setContext(
                     stage,
-                    gridPane.getScene(),  // On passe bien la scène de jeu en "previousScene"
+                    gridPane.getScene(),
                     (newJ1, newJ2, newTheme) -> {
                         this.indexJ1 = newJ1;
                         this.indexJ2 = newJ2;
@@ -892,8 +864,8 @@ public class GameController {
                         loadThemeAssets();
                         drawBoard();
                         updatePlayersDisplay();
-                        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ1], Direction.FACE));
-                        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLOR_KEYS[indexJ2], Direction.FACE));
+                        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.FACE));
+                        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
                     },
                     this.indexJ1, this.indexJ2, this.themeIndex
             );
