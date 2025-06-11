@@ -54,7 +54,7 @@ public class BomberManApp extends Application {
             e.printStackTrace();
         }
     }
-
+ 
     public static void showPlaceholder(String message) {
         try {
             FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/FXML/placeholder.fxml"));
