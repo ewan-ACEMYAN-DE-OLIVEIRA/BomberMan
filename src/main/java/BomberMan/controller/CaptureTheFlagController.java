@@ -75,7 +75,8 @@ public class CaptureTheFlagController {
     private int p2BombCount = 0;
     private Bomb[][] bombs = new Bomb[rows][cols];
     private boolean[][] isExplosion = new boolean[rows][cols];
-
+    private Scene gameScene;
+    
     private static class Bomb {
         int row, col, owner, radius;
         public Bomb(int row, int col, int owner, int radius) {
@@ -91,12 +92,15 @@ public class CaptureTheFlagController {
         p2Pos = new Point(p2Base);
         flag1Pos = new Point(p1Base);
         flag2Pos = new Point(p2Base);
-
+        
+        // Génère la map (murs indestructibles, murs destructibles, pelouse)
         generateCTFMap();
-
+        
+        // Init affichage joueurs top bar
         if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.FACE));
         if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
-
+        
+        // Grille graphique
         setupGridPaneResize();
         gridPane.getChildren().clear();
         for (int r = 0; r < rows; r++) {
@@ -133,9 +137,9 @@ public class CaptureTheFlagController {
                 cellPlayer2[r][c] = p2;
                 cellBombs[r][c] = bomb;
                 cellExplosions[r][c] = explosion;
-
+                
                 cell.getChildren().addAll(bg, destructible, flag, p1, p2, bomb, explosion);
-
+                
                 gridPane.add(cell, c, r);
             }
         }
@@ -144,37 +148,79 @@ public class CaptureTheFlagController {
         updateFlags();
         updateBombs();
         updateExplosions();
-
+        
+        // Timer et scores
         if (timerLabel != null) timerLabel.setText("00:00");
         if (scoreP1Label != null) scoreP1Label.setText("0");
         if (scoreP2Label != null) scoreP2Label.setText("0");
         timerTimeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateTimer()));
         timerTimeline.setCycleCount(Timeline.INDEFINITE);
         timerTimeline.playFromStart();
-
+        
+        // Gestion clavier
         gridPane.setFocusTraversable(true);
         gridPane.requestFocus();
         gridPane.setOnKeyPressed(this::handleKeyPressed);
         gridPane.setOnMouseClicked(e -> gridPane.requestFocus());
-
+        
+        // Boutons menu/perso
         if (backMenuButton != null) backMenuButton.setOnAction(e -> onBackMenu());
         if (btnPerso != null) btnPerso.setOnAction(e -> openPersonnalisationPage());
-
+        
+        // Icônes boutons musique (à compléter avec MusicManager si besoin)
         if (pauseIcon != null) pauseIcon.setImage(safeLoad("/images/pause.png"));
         if (nextIcon != null) nextIcon.setImage(safeLoad("/images/pass.png"));
         if (restartIcon != null) restartIcon.setImage(safeLoad("/images/revenir.png"));
-
+        
+        // Resize dynamique
         gameCenterPane.widthProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         gameCenterPane.heightProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         resizeGridPane();
-
+        
         if (winnerLabel != null) winnerLabel.setVisible(false);
-
+        
         if (btnPauseMusic != null) btnPauseMusic.setOnAction(e -> onPauseMusic());
         if (btnNextMusic != null) btnNextMusic.setOnAction(e -> onNextMusic());
         if (btnRestartMusic != null) btnRestartMusic.setOnAction(e -> onRestartMusic());
+        // Initialisation des icônes des boutons
+        if (pauseIcon != null) {
+            pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+        }
+        if (nextIcon != null) {
+            nextIcon.setImage(new Image(getClass().getResource("/images/pass.png").toExternalForm()));
+        }
+        if (restartIcon != null) {
+            restartIcon.setImage(new Image(getClass().getResource("/images/revenir.png").toExternalForm()));
+        }
+        
+        // --- NOUVEAU : branche MusicManager sur les boutons ---
+        if (btnPauseMusic != null) {
+            btnPauseMusic.setOnAction(e -> {
+                if (MusicManager.isPaused()) {
+                    MusicManager.resume();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+                } else {
+                    MusicManager.pause();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/play.png").toExternalForm()));
+                }
+            });
+        }
+        if (btnRestartMusic != null) {
+            btnRestartMusic.setOnAction(e -> {
+                MusicManager.restart();
+                if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+            });
+        }
+        if (btnNextMusic != null) {
+            btnNextMusic.setOnAction(e -> {
+                MusicManager.playNextGameMusic();
+                if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+            });
+        }
+        // Optionnel : joue une musique au lancement du jeu
+        MusicManager.playGameMusic();
     }
-
+    
     private void loadThemeAssets() {
         String folder = THEME_FOLDERS[themeIndex];
         pelouseImg      = loadAsset(folder, "pelouse.png");
@@ -184,7 +230,7 @@ public class CaptureTheFlagController {
         explosionImg    = loadAsset(folder, "explosion.png");
         flagImg         = safeLoad("/images/flag.png");
     }
-
+    
     private void generateCTFMap() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -202,7 +248,7 @@ public class CaptureTheFlagController {
         map[flag1Pos.x][flag1Pos.y] = "pelouse";
         map[flag2Pos.x][flag2Pos.y] = "pelouse";
     }
-
+    
     private void drawBoard() {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -216,7 +262,7 @@ public class CaptureTheFlagController {
             }
         }
     }
-
+    
     private void updatePlayersDisplay() {
         for (int r=0; r<rows; r++) for (int c=0; c<cols; c++) {
             cellPlayer1[r][c].setVisible(false);
@@ -227,7 +273,7 @@ public class CaptureTheFlagController {
         cellPlayer2[p2Pos.x][p2Pos.y].setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
         cellPlayer2[p2Pos.x][p2Pos.y].setVisible(true);
     }
-
+    
     private void updateFlags() {
         for (int r=0; r<rows; r++) for (int c=0; c<cols; c++) {
             cellFlags[r][c].setVisible(false);
@@ -242,7 +288,7 @@ public class CaptureTheFlagController {
             cellFlags[flag1Pos.x][flag1Pos.y].setVisible(true);
         }
     }
-
+    
     private void updateBombs() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -251,7 +297,7 @@ public class CaptureTheFlagController {
                 if (has) cellBombs[r][c].setImage(bombImg);
             }
     }
-
+    
     private void updateExplosions() {
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) {
@@ -259,26 +305,26 @@ public class CaptureTheFlagController {
                 if (isExplosion[r][c]) cellExplosions[r][c].setImage(explosionImg);
             }
     }
-
+    
     private boolean inMap(Point p) {
         return p.x >= 0 && p.x < rows && p.y >= 0 && p.y < cols;
     }
-
+    
     private void showWinner(int player) {
         gameEnded = true;
         if (timerTimeline != null) timerTimeline.stop();
-
+        
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.setTitle("Victoire !");
-
+        
         VBox vbox = new VBox(20);
         vbox.setAlignment(Pos.CENTER);
-
+        
         String msg = (player == 1) ? "Le joueur 1 a gagné la partie !" : "Le joueur 2 a gagné la partie !";
         Label label = new Label(msg);
         label.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
-
+        
         ImageView winnerImg;
         if (player == 1) {
             winnerImg = new ImageView(getPlayerImage(COLORS[indexJ1], Direction.FACE));
@@ -286,20 +332,24 @@ public class CaptureTheFlagController {
             winnerImg = new ImageView(getPlayerImage(COLORS[indexJ2], Direction.FACE));
         }
         winnerImg.setFitHeight(80); winnerImg.setFitWidth(80);
-
+        
         Button backBtn = new Button("Retour au menu");
         backBtn.setStyle("-fx-font-size: 16px; -fx-background-color: #b00; -fx-text-fill: white;");
         backBtn.setOnAction(e -> {
             dialog.close();
+            // MusicManager.playMenuMusic(); // décommente si tu utilises MusicManager
             BomberManApp.showMenu();
         });
-
+        
         vbox.getChildren().addAll(label, winnerImg, backBtn);
         Scene scene = new Scene(vbox, 350, 250);
         dialog.setScene(scene);
+        
+        // MusicManager.playVictoryMusic(); // décommente si tu utilises MusicManager
+        
         dialog.show();
     }
-
+    
     private boolean isWalkable(int row, int col) {
         if (row < 0 || row >= rows || col < 0 || col >= cols) return false;
         if (!(map[row][col].equals("pelouse"))) return false;
@@ -307,7 +357,7 @@ public class CaptureTheFlagController {
         if ((row == p1Pos.x && col == p1Pos.y) || (row == p2Pos.x && col == p2Pos.y)) return false;
         return true;
     }
-
+    
     private void placeBomb(int row, int col, int owner, int radius) {
         if (!map[row][col].equals("pelouse") || bombs[row][col] != null) return;
         if (owner == 1 && p1BombCount >= maxBombsPerPlayer) return;
@@ -320,16 +370,17 @@ public class CaptureTheFlagController {
         timeline.setCycleCount(1);
         timeline.play();
     }
-
+    
     private void explodeBomb(int row, int col) {
         Bomb bomb = bombs[row][col];
         if (bomb == null) return;
         bombs[row][col] = null;
         if (bomb.owner == 1 && p1BombCount > 0) p1BombCount--;
         if (bomb.owner == 2 && p2BombCount > 0) p2BombCount--;
-
+        
         boolean[][] exploded = new boolean[rows][cols];
         exploded[row][col] = true;
+        // Explosion centrale + croix
         for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
             for (int r=1; r<=bomb.radius; r++) {
                 int nr = row + dir[0]*r, nc = col + dir[1]*r;
@@ -339,13 +390,14 @@ public class CaptureTheFlagController {
                 if (map[nr][nc].equals("destructible")) break;
             }
         }
+        // Affiche explosion
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++)
                 if (exploded[r][c]) isExplosion[r][c] = true;
         updateBombs();
         updateExplosions();
         updatePlayersDisplay();
-
+        
         boolean p1Killed = false, p2Killed = false;
         for (int r = 0; r < rows; r++)
             for (int c = 0; c < cols; c++) if (exploded[r][c]) {
@@ -355,25 +407,28 @@ public class CaptureTheFlagController {
             }
         final boolean p1KilledFinal = p1Killed;
         final boolean p2KilledFinal = p2Killed;
-
+        
         drawBoard();
-
+        
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(500), e -> {
             for (int r = 0; r < rows; r++)
                 for (int c = 0; c < cols; c++)
                     if (exploded[r][c]) isExplosion[r][c] = false;
             updateExplosions();
             updatePlayersDisplay();
-
+            
             if (!gameEnded && (p1KilledFinal || p2KilledFinal)) {
+                // Respawn joueur 1
                 if (p1KilledFinal) {
                     p1Pos.setLocation(p1Base);
-                    p1HasFlag = false;
+                    p1HasFlag = false; // il lâche le flag adverse
+                    // On remet le flag adverse à sa base si besoin
                     if (flag2Pos.x == -1 && flag2Pos.y == -1) {
                         flag2Pos.setLocation(p2Base);
                         p2HasFlag = false;
                     }
                 }
+                // Respawn joueur 2
                 if (p2KilledFinal) {
                     p2Pos.setLocation(p2Base);
                     p2HasFlag = false;
@@ -389,11 +444,12 @@ public class CaptureTheFlagController {
         timeline.setCycleCount(1);
         timeline.play();
     }
-
+    
     private void handleKeyPressed(KeyEvent event) {
         if (gameEnded) return;
         KeyCode code = event.getCode();
-
+        
+        // Joueur 1 : ZQSD + E
         int nr1 = p1Pos.x, nc1 = p1Pos.y;
         boolean moved1 = false, bomb1 = false;
         switch (code) {
@@ -421,7 +477,8 @@ public class CaptureTheFlagController {
         if (bomb1 && p1BombCount < maxBombsPerPlayer && bombs[p1Pos.x][p1Pos.y] == null && map[p1Pos.x][p1Pos.y].equals("pelouse")) {
             placeBomb(p1Pos.x, p1Pos.y, 1, bombRadius);
         }
-
+        
+        // Joueur 2 : Flèches + U
         int nr2 = p2Pos.x, nc2 = p2Pos.y;
         boolean moved2 = false, bomb2 = false;
         switch (code) {
@@ -450,7 +507,9 @@ public class CaptureTheFlagController {
             placeBomb(p2Pos.x, p2Pos.y, 2, bombRadius);
         }
     }
-
+    
+    // Utilities
+    
     private Image getPlayerImage(String colorKey, Direction dir) {
         String path = "/Personnages/" + colorKey + "/Face.png";
         java.net.URL url = getClass().getResource(path);
@@ -461,7 +520,7 @@ public class CaptureTheFlagController {
         }
         return new Image(url.toString());
     }
-
+    
     private Image safeLoad(String path) {
         java.net.URL url = getClass().getResource(path);
         if (url == null) {
@@ -470,7 +529,7 @@ public class CaptureTheFlagController {
         }
         return new Image(url.toString());
     }
-
+    
     private Image loadAsset(String folder, String file) {
         String path = "/images/" + folder + "/" + file;
         java.net.URL url = getClass().getResource(path);
@@ -483,7 +542,7 @@ public class CaptureTheFlagController {
         }
         return new Image(url.toString());
     }
-
+    
     private void updateTimer() {
         elapsedSeconds++;
         int min = elapsedSeconds / 60;
@@ -491,13 +550,15 @@ public class CaptureTheFlagController {
         if (timerLabel != null)
             timerLabel.setText(String.format("%02d:%02d", min, sec));
     }
-
+    
     @FXML
     private void onBackMenu() {
         if (timerTimeline != null) timerTimeline.stop();
         BomberManApp.showMenu();
+        MusicManager.stopMusic();
+        BomberManApp.showMenu();
     }
-
+    
     private void setupGridPaneResize() {
         gridPane.getColumnConstraints().clear();
         gridPane.getRowConstraints().clear();
@@ -514,7 +575,7 @@ public class CaptureTheFlagController {
             gridPane.getRowConstraints().add(rowConst);
         }
     }
-
+    
     private void resizeGridPane() {
         double paneW = gameCenterPane.getWidth();
         double paneH = gameCenterPane.getHeight();
@@ -561,17 +622,25 @@ public class CaptureTheFlagController {
             ex.printStackTrace();
         }
     }
-
+    
     @FXML
     private void onPauseMusic() {
-        // MusicManager.pause();
+        if (MusicManager.isPaused()) {
+            MusicManager.resume();
+        } else {
+            MusicManager.pause();
+        }
     }
+    
     @FXML
     private void onNextMusic() {
-        // MusicManager.playNextGameMusic();
+        MusicManager.playNextGameMusic();
     }
+    
     @FXML
     private void onRestartMusic() {
-        // MusicManager.restart();
+        MusicManager.restart();
     }
+    
+
 }
