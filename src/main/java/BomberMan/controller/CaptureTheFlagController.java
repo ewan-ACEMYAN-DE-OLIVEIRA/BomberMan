@@ -103,8 +103,8 @@ public class CaptureTheFlagController {
         generateCTFMap();
         
         // Init affichage joueurs top bar
-        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
-        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
+        if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.FACE));
+        if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
         
         // Grille graphique
         setupGridPaneResize();
@@ -223,9 +223,9 @@ public class CaptureTheFlagController {
             cellPlayer1[r][c].setVisible(false);
             cellPlayer2[r][c].setVisible(false);
         }
-        cellPlayer1[p1Pos.x][p1Pos.y].setImage(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
+        cellPlayer1[p1Pos.x][p1Pos.y].setImage(getPlayerImage(COLORS[indexJ1], Direction.FACE));
         cellPlayer1[p1Pos.x][p1Pos.y].setVisible(true);
-        cellPlayer2[p2Pos.x][p2Pos.y].setImage(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
+        cellPlayer2[p2Pos.x][p2Pos.y].setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
         cellPlayer2[p2Pos.x][p2Pos.y].setVisible(true);
     }
     
@@ -282,9 +282,9 @@ public class CaptureTheFlagController {
         
         ImageView winnerImg;
         if (player == 1) {
-            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
+            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ1], Direction.FACE));
         } else {
-            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
+            winnerImg = new ImageView(getPlayerImage(COLORS[indexJ2], Direction.FACE));
         }
         winnerImg.setFitHeight(80); winnerImg.setFitWidth(80);
         
