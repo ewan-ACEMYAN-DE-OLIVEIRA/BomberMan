@@ -188,7 +188,41 @@ public class CaptureTheFlagController {
         if (btnPauseMusic != null) btnPauseMusic.setOnAction(e -> onPauseMusic());
         if (btnNextMusic != null) btnNextMusic.setOnAction(e -> onNextMusic());
         if (btnRestartMusic != null) btnRestartMusic.setOnAction(e -> onRestartMusic());
+        // Initialisation des icônes des boutons
+        if (pauseIcon != null) {
+            pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+        }
+        if (nextIcon != null) {
+            nextIcon.setImage(new Image(getClass().getResource("/images/pass.png").toExternalForm()));
+        }
+        if (restartIcon != null) {
+            restartIcon.setImage(new Image(getClass().getResource("/images/revenir.png").toExternalForm()));
+        }
         
+        // --- NOUVEAU : branche MusicManager sur les boutons ---
+        if (btnPauseMusic != null) {
+            btnPauseMusic.setOnAction(e -> {
+                if (MusicManager.isPaused()) {
+                    MusicManager.resume();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+                } else {
+                    MusicManager.pause();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/play.png").toExternalForm()));
+                }
+            });
+        }
+        if (btnRestartMusic != null) {
+            btnRestartMusic.setOnAction(e -> {
+                MusicManager.restart();
+                if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+            });
+        }
+        if (btnNextMusic != null) {
+            btnNextMusic.setOnAction(e -> {
+                MusicManager.playNextGameMusic();
+                if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+            });
+        }
         // Optionnel : joue une musique au lancement du jeu
         MusicManager.playGameMusic();
     }

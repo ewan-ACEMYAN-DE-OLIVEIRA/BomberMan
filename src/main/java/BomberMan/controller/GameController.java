@@ -69,9 +69,10 @@ public class GameController {
     private ImageView[][] cellPlayer1     = new ImageView[rows][cols];
     private ImageView[][] cellPlayer2     = new ImageView[rows][cols];
 
-    //son bonus
+    //son bonus/malus
     private AudioClip bonusSound;
-
+    private AudioClip bonusMalusSound;
+    
     //ia
     private String iaDifficulty = null;
     private boolean isIaFacile = false;
@@ -131,15 +132,15 @@ public class GameController {
             this.row = row; this.col = col; this.owner = owner; this.radius = radius;
         }
     }
-
+    
     @FXML
     public void initialize() {
         loadThemeAssets();
         setupGridPaneResize();
-
+        
         if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.FACE));
         if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
-
+        
         gridPane.getChildren().clear();
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -197,6 +198,11 @@ public class GameController {
             bonusSound = new AudioClip(bonusSoundUrl.toExternalForm());
         }
         
+        URL bonusMalusUrl = getClass().getResource("/Son/Malus.mp3");
+        if (bonusMalusUrl != null) {
+            bonusMalusSound = new AudioClip(bonusMalusUrl.toExternalForm());
+        }
+        
         gridPane.setFocusTraversable(true);
         gridPane.requestFocus();
         gridPane.setOnKeyPressed(this::handleKeyPressed);
@@ -220,43 +226,44 @@ public class GameController {
         if (nextIcon != null) {
             nextIcon.setImage(new Image(getClass().getResource("/images/pass.png").toExternalForm()));
         }
-        if (btnNextMusic != null) {
-            btnNextMusic.setOnAction(e -> playNextMusic());
+        if (restartIcon != null) {
+            restartIcon.setImage(new Image(getClass().getResource("/images/revenir.png").toExternalForm()));
         }
         
-        // Gestion des boutons de contrôle musique avec MusicManager
+        // --- NOUVEAU : branche MusicManager sur les boutons ---
         if (btnPauseMusic != null) {
             btnPauseMusic.setOnAction(e -> {
-                if (mediaPlayer == null) return;
-                if (isMusicPaused) {
-                    mediaPlayer.play();
+                if (MusicManager.isPaused()) {
+                    MusicManager.resume();
                     if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
                 } else {
-                    mediaPlayer.pause();
+                    MusicManager.pause();
                     if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/play.png").toExternalForm()));
                 }
             });
         }
-        if (restartIcon != null) {
-            restartIcon.setImage(new Image(getClass().getResource("/images/revenir.png").toExternalForm()));
-        }
         if (btnRestartMusic != null) {
             btnRestartMusic.setOnAction(e -> {
-                if (mediaPlayer != null) {
-                    mediaPlayer.seek(javafx.util.Duration.ZERO);
-                    if (isMusicPaused) {
-                        mediaPlayer.play();
-                        isMusicPaused = false;
-                        pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
-                    }
-                }
+                MusicManager.restart();
+                if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
             });
         }
-        playMusic(currentMusicIndex);
+        if (btnNextMusic != null) {
+            btnNextMusic.setOnAction(e -> {
+                MusicManager.playNextGameMusic();
+                if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+            });
+        }
+        
+        // --- Lance la musique du jeu (et coupe le menu si besoin) ---
+        MusicManager.playGameMusic();
+        
         gameCenterPane.widthProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         gameCenterPane.heightProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         resizeGridPane();
     }
+    
+    
     private boolean canHitPlayerWithBomb(int bombR, int bombC, int radius) {
         for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
             for (int dist = 1; dist <= radius; dist++) {
@@ -460,6 +467,7 @@ public class GameController {
                     updateBonusesDisplay();
                 } else if (map[p2Row][p2Col].equals("malus_range")) {
                     p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+                    if (bonusMalusSound != null) bonusMalusSound.play();
                     map[p2Row][p2Col] = "pelouse";
                     updateBonusesDisplay();
                 }
@@ -574,6 +582,7 @@ public class GameController {
             updateBonusesDisplay();
         } else if (map[p2Row][p2Col].equals("malus_range")) {
             p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+            if (bonusMalusSound != null) bonusMalusSound.play();
             map[p2Row][p2Col] = "pelouse";
             updateBonusesDisplay();
         }
@@ -660,6 +669,7 @@ public class GameController {
             updateBonusesDisplay();
         } else if (map[p2Row][p2Col].equals("malus_range")) {
             p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+            if (bonusMalusSound != null) bonusMalusSound.play();
             map[p2Row][p2Col] = "pelouse";
             updateBonusesDisplay();
         }
@@ -917,6 +927,7 @@ public class GameController {
                     if (bonusSound != null) bonusSound.play();
                 } else if (map[p1Row][p1Col].equals("malus_range")) {
                     p1ExplosionRadius = Math.max(p1ExplosionRadius - 1, 1);
+                    if (bonusMalusSound != null) bonusMalusSound.play();
                 }
                 if (map[p1Row][p1Col].equals("bonus_range") || map[p1Row][p1Col].equals("malus_range")) {
                     map[p1Row][p1Col] = "pelouse";
@@ -951,6 +962,7 @@ public class GameController {
                     if (bonusSound != null) bonusSound.play();
                 } else if (map[p2Row][p2Col].equals("malus_range")) {
                     p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+                    if (bonusMalusSound != null) bonusMalusSound.play();
                 }
                 if (map[p2Row][p2Col].equals("bonus_range") || map[p2Row][p2Col].equals("malus_range")) {
                     map[p2Row][p2Col] = "pelouse";
@@ -1172,10 +1184,11 @@ public class GameController {
             if (scoreP2Label != null) scoreP2Label.setText(String.valueOf(scoreP2));
         }
     }
-
+    
     @FXML
     private void onBackMenu() {
         if (timerTimeline != null) timerTimeline.stop();
+        MusicManager.playMenuMusic(); // (optionnel, si tu veux relancer la musique du menu)
         BomberManApp.showMenu();
     }
     
