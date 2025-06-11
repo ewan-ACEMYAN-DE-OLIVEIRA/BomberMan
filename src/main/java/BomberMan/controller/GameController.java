@@ -275,7 +275,37 @@ public class GameController {
         gameCenterPane.heightProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         resizeGridPane();
     }
+    private boolean canHitPlayerWithBomb(int bombR, int bombC, int radius) {
+        for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
+            for (int dist = 1; dist <= radius; dist++) {
+                int nr = bombR + dir[0]*dist, nc = bombC + dir[1]*dist;
+                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) break;
+                if (map[nr][nc].equals("wall")) break;
+                if (nr == p1Row && nc == p1Col && p1Alive) return true;
+                if (map[nr][nc].equals("destructible")) break;
+            }
+        }
+        return false;
+    }
 
+    // Prédit si une bombe ici casserait un mur qui sépare l'IA du joueur
+    private boolean canDestroyWallTowardsPlayer() {
+        // Cherche direction du joueur
+        int dr = Integer.compare(p1Row, p2Row);
+        int dc = Integer.compare(p1Col, p2Col);
+        // S'il y a un mur destructible entre l'IA et le joueur dans une ligne ou colonne
+        if (dr == 0 || dc == 0) {
+            int r = p2Row, c = p2Col;
+            for (int i = 1; i <= p2ExplosionRadius; i++) {
+                r += dr; c += dc;
+                if (r < 0 || r >= rows || c < 0 || c >= cols) break;
+                if (map[r][c].equals("wall")) break;
+                if (map[r][c].equals("destructible")) return true;
+                if (r == p1Row && c == p1Col) break;
+            }
+        }
+        return false;
+    }
     private void resizeGridPane() {
         double paneW = gameCenterPane.getWidth();
         double paneH = gameCenterPane.getHeight();
@@ -355,7 +385,17 @@ public class GameController {
         currentMusicIndex = (currentMusicIndex + 1) % musicFiles.size();
         playMusic(currentMusicIndex);
     }
-
+    private Direction getDirection(int fromR, int fromC, int toR, int toC) {
+        if (fromR == toR) {
+            if (toC == fromC + 1) return Direction.RIGHT;
+            if (toC == fromC - 1) return Direction.LEFT;
+        }
+        if (fromC == toC) {
+            if (toR == fromR + 1) return Direction.DOWN;
+            if (toR == fromR - 1) return Direction.UP;
+        }
+        return null;
+    }
     public void initGame(boolean is1v1, String difficulty) {
         scoreP1 = 0;
         scoreP2 = 0;
@@ -394,6 +434,11 @@ public class GameController {
         }
         if (isIaNormal) {
             iaTimeline = new Timeline(new KeyFrame(Duration.seconds(0.4), e -> iaSmartMove())); // même lenteur, tu peux ajuster
+            iaTimeline.setCycleCount(Timeline.INDEFINITE);
+            iaTimeline.play();
+        }
+        if (isIaDifficile) {
+            iaTimeline = new Timeline(new KeyFrame(Duration.seconds(0.25), e -> iaDifficileMove()));
             iaTimeline.setCycleCount(Timeline.INDEFINITE);
             iaTimeline.play();
         }
@@ -568,7 +613,209 @@ public class GameController {
                 }
             }
     }
+    private void iaDifficileMove() {
+        if (!isIaDifficile || gameEnded || !p2Alive) return;
 
+        Set<String> dangerCells = getDangerCells();
+        boolean inDanger = dangerCells.contains(p2Row + "," + p2Col);
+
+        // --- 1. FUITE INTELLIGENTE SI EN DANGER ---
+        if (inDanger) {
+            // Cherche la case sûre la plus proche (BFS)
+            boolean[][] visited = new boolean[rows][cols];
+            Queue<int[]> queue = new ArrayDeque<>();
+            queue.add(new int[]{p2Row, p2Col, 0});
+            visited[p2Row][p2Col] = true;
+            int[] goal = null;
+            Map<String, int[]> parent = new HashMap<>();
+
+            while (!queue.isEmpty()) {
+                int[] cell = queue.poll();
+                int r = cell[0], c = cell[1], dist = cell[2];
+                if (!dangerCells.contains(r + "," + c) && isWalkable(r, c, 2)) {
+                    goal = cell;
+                    break;
+                }
+                for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
+                    int nr = r + dir[0], nc = c + dir[1];
+                    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                    if (!visited[nr][nc] && isWalkable(nr, nc, 2)) {
+                        visited[nr][nc] = true;
+                        queue.add(new int[]{nr, nc, dist + 1});
+                        parent.put(nr + "," + nc, new int[]{r, c});
+                    }
+                }
+            }
+            if (goal != null && (goal[0] != p2Row || goal[1] != p2Col)) {
+                // Revenir au premier pas vers la case safe
+                int cr = goal[0], cc = goal[1];
+                while (parent.containsKey(cr + "," + cc) && !(parent.get(cr + "," + cc)[0] == p2Row && parent.get(cr + "," + cc)[1] == p2Col)) {
+                    int[] p = parent.get(cr + "," + cc);
+                    cr = p[0];
+                    cc = p[1];
+                }
+                Direction dir = getDirection(p2Row, p2Col, cr, cc);
+                if (dir != null) {
+                    p2Row = cr; p2Col = cc; p2Dir = dir;
+                    updatePlayersDisplay();
+                }
+                return;
+            }
+            // Sinon, reste sur place (bloqué)
+            return;
+        }
+
+        // --- 2. RAMASSE BONUS/MALUS ---
+        if (map[p2Row][p2Col].equals("bonus_range")) {
+            p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
+            if (bonusSound != null) bonusSound.play();
+            map[p2Row][p2Col] = "pelouse";
+            updateBonusesDisplay();
+        } else if (map[p2Row][p2Col].equals("malus_range")) {
+            p2ExplosionRadius = Math.max(p2ExplosionRadius - 1, 1);
+            map[p2Row][p2Col] = "pelouse";
+            updateBonusesDisplay();
+        }
+
+        // --- 3. SI JOUEUR ACCESSIBLE DIRECTEMENT : POSE UNE BOMBE ---
+        if (canHitPlayerWithBomb(p2Row, p2Col, p2ExplosionRadius)) {
+            if (bombs[p2Row][p2Col] == null && p2BombCount < 2 && !dangerCells.contains(p2Row + "," + p2Col)) {
+                placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
+                return;
+            }
+        }
+
+        // --- 4. SI MUR DESTRUCTIBLE SEPARE IA ET JOUEUR : POSE UNE BOMBE ---
+        if (canDestroyWallTowardsPlayer()) {
+            if (bombs[p2Row][p2Col] == null && p2BombCount < 2 && !dangerCells.contains(p2Row + "," + p2Col)) {
+                placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
+                return;
+            }
+        }
+
+        // --- 5. SE RAPPROCHER DU JOUEUR VIA LE PLUS COURT CHEMIN (EN EVITANT LES DANGERS) ---
+        int[] target = {p1Row, p1Col};
+        int[][] dist = new int[rows][cols];
+        for (int[] row : dist) Arrays.fill(row, -1);
+        Queue<int[]> queue = new ArrayDeque<>();
+        queue.add(new int[]{p2Row, p2Col});
+        dist[p2Row][p2Col] = 0;
+        Map<String, int[]> parent = new HashMap<>();
+        int[] nextStep = null;
+        while (!queue.isEmpty()) {
+            int[] cell = queue.poll();
+            int r = cell[0], c = cell[1];
+            if (r == target[0] && c == target[1]) {
+                // On a trouvé un chemin jusqu'au joueur
+                nextStep = cell;
+                break;
+            }
+            for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
+                int nr = r + dir[0], nc = c + dir[1];
+                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                if (dist[nr][nc] == -1 && isWalkable(nr, nc, 2) && !dangerCells.contains(nr + "," + nc)) {
+                    dist[nr][nc] = dist[r][c] + 1;
+                    queue.add(new int[]{nr, nc});
+                    parent.put(nr + "," + nc, new int[]{r, c});
+                }
+            }
+        }
+        if (nextStep != null) {
+            // Revenir au premier pas
+            int cr = nextStep[0], cc = nextStep[1];
+            while (parent.containsKey(cr + "," + cc) && !(parent.get(cr + "," + cc)[0] == p2Row && parent.get(cr + "," + cc)[1] == p2Col)) {
+                int[] p = parent.get(cr + "," + cc);
+                cr = p[0];
+                cc = p[1];
+            }
+            Direction dir = getDirection(p2Row, p2Col, cr, cc);
+            if (dir != null) {
+                p2Row = cr; p2Col = cc; p2Dir = dir;
+                updatePlayersDisplay();
+                return;
+            }
+        }
+
+        // --- 6. Si pas d'action possible, casser des murs pour explorer ---
+        boolean foundDestructible = false;
+        boolean[][] visited = new boolean[rows][cols];
+        Queue<int[]> queue2 = new ArrayDeque<>();
+        queue2.add(new int[]{p2Row, p2Col});
+        visited[p2Row][p2Col] = true;
+        Map<String, int[]> parent2 = new HashMap<>();
+        int[] destructibleCell = null;
+
+        while (!queue2.isEmpty() && !foundDestructible) {
+            int[] cell = queue2.poll();
+            int r = cell[0], c = cell[1];
+            // Cherche autour si un mur destructible est à portée de bombe
+            for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
+                for (int dist2 = 1; dist2 <= p2ExplosionRadius; dist2++) {
+                    int nr = r + dir[0]*dist2, nc = c + dir[1]*dist2;
+                    if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) break;
+                    if (map[nr][nc].equals("wall")) break;
+                    if (map[nr][nc].equals("destructible")) {
+                        // Si IA est déjà à la bonne position, pose une bombe !
+                        if (r == p2Row && c == p2Col && bombs[p2Row][p2Col] == null && p2BombCount < 2) {
+                            placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
+                            return;
+                        }
+                        // Sinon, on va essayer d'atteindre ce point
+                        destructibleCell = cell;
+                        foundDestructible = true;
+                        break;
+                    }
+                }
+                if (foundDestructible) break;
+            }
+            // Parcours en largeur pour atteindre une case d'où l'on pourra casser un mur
+            for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
+                int nr = r + dir[0], nc = c + dir[1];
+                if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+                if (!visited[nr][nc] && isWalkable(nr, nc, 2)) {
+                    visited[nr][nc] = true;
+                    queue2.add(new int[]{nr, nc});
+                    parent2.put(nr + "," + nc, new int[]{r, c});
+                }
+            }
+        }
+        // Si on a trouvé une case d'où casser un mur, on y va
+        if (destructibleCell != null && (destructibleCell[0] != p2Row || destructibleCell[1] != p2Col)) {
+            int cr = destructibleCell[0], cc = destructibleCell[1];
+            while (parent2.containsKey(cr + "," + cc) && !(parent2.get(cr + "," + cc)[0] == p2Row && parent2.get(cr + "," + cc)[1] == p2Col)) {
+                int[] p = parent2.get(cr + "," + cc);
+                cr = p[0];
+                cc = p[1];
+            }
+            Direction dir = getDirection(p2Row, p2Col, cr, cc);
+            if (dir != null) {
+                p2Row = cr; p2Col = cc; p2Dir = dir;
+                updatePlayersDisplay();
+                return;
+            }
+        }
+
+        // --- 7. SINON, DEPLACEMENT RANDOM ---
+        List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+        Collections.shuffle(directions, aiRandom);
+        for (Direction dir : directions) {
+            int newRow = p2Row, newCol = p2Col;
+            switch (dir) {
+                case UP:    newRow--; break;
+                case DOWN:  newRow++; break;
+                case LEFT:  newCol--; break;
+                case RIGHT: newCol++; break;
+            }
+            if (isWalkable(newRow, newCol, 2) && !dangerCells.contains(newRow + "," + newCol)) {
+                p2Row = newRow;
+                p2Col = newCol;
+                p2Dir = dir;
+                updatePlayersDisplay();
+                return;
+            }
+        }
+        // Sinon, reste sur place
+    }
     private void generateRandomMap() {
         Random rand = new Random();
         int[][] joueurs = {{1, 1}, {rows - 2, cols - 2}};
