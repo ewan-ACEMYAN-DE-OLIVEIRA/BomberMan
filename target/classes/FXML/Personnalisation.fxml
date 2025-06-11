@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="TOP_CENTER" spacing="32.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="BomberMan.controller.PersonnalisationController" style="-fx-background-color: #222;">
+    <children>
+        <Label text="Personnalisation" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: white;" />
+
+        <!-- Ligne Joueur 1 -->
+        <HBox alignment="CENTER" spacing="16">
+            <children>
+                <Label text="Joueur 1" style="-fx-font-size: 22px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button fx:id="leftJ1" text="&lt;" style="-fx-font-size: 20px; -fx-background-radius: 10px;"/>
+                <Label fx:id="couleurJ1Label" text="Blanc" style="-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;"/>
+                <Button fx:id="rightJ1" text="&gt;" style="-fx-font-size: 20px; -fx-background-radius: 10px;"/>
+                <ImageView fx:id="imageJ1" fitWidth="52" fitHeight="52" preserveRatio="true"/>
+            </children>
+        </HBox>
+
+        <!-- Ligne Joueur 2 -->
+        <HBox alignment="CENTER" spacing="16">
+            <children>
+                <Label text="Joueur 2" style="-fx-font-size: 22px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button fx:id="leftJ2" text="&lt;" style="-fx-font-size: 20px; -fx-background-radius: 10px;"/>
+                <Label fx:id="couleurJ2Label" text="Rouge" style="-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;"/>
+                <Button fx:id="rightJ2" text="&gt;" style="-fx-font-size: 20px; -fx-background-radius: 10px;"/>
+                <ImageView fx:id="imageJ2" fitWidth="52" fitHeight="52" preserveRatio="true"/>
+            </children>
+        </HBox>
+
+        <!-- Image du thème -->
+        <HBox alignment="CENTER">
+            <children>
+                <ImageView fx:id="themeImg" fitWidth="320" fitHeight="180" preserveRatio="true"/>
+            </children>
+        </HBox>
+
+        <!-- Ligne Thème -->
+        <HBox alignment="CENTER" spacing="16">
+            <children>
+                <Label text="Map :" style="-fx-font-size: 22px; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Button fx:id="leftTheme" text="&lt;" style="-fx-font-size: 20px; -fx-background-radius: 10px;"/>
+                <Label fx:id="themeNameLabel" text="Base" style="-fx-font-size: 22px; -fx-text-fill: #fff; -fx-font-weight: bold;"/>
+                <Button fx:id="rightTheme" text="&gt;" style="-fx-font-size: 20px; -fx-background-radius: 10px;"/>
+            </children>
+        </HBox>
+
+        <!-- Bouton Appliquer -->
+        <Button fx:id="applyBtn" text="Appliquer"
+                onAction="#appliquerAction"
+                style="-fx-font-size: 18px; -fx-background-color: #4090c0; -fx-text-fill: white; -fx-padding: 12 32 12 32; -fx-background-radius: 8px;"/>
+    </children>
+    <padding>
+        <Insets top="28" right="28" bottom="28" left="28"/>
+    </padding>
+</VBox>
