@@ -29,14 +29,12 @@ import BomberMan.Direction;
 
 public class GameController {
     @FXML private GridPane gridPane;
-    @FXML private HBox topBar;
     @FXML private Label timerLabel;
     @FXML private Label scoreP1Label;
     @FXML private Label scoreP2Label;
     @FXML private Button backMenuButton;
     @FXML private ImageView p1Icon;
     @FXML private ImageView p2Icon;
-    @FXML private HBox bottomBar;
     @FXML private Button btnPerso;
     @FXML private StackPane gameCenterPane;
     @FXML private Button btnRestartMusic;
@@ -47,7 +45,6 @@ public class GameController {
     @FXML private ImageView nextIcon;
 
     private final int rows = 13, cols = 15;
-    private final int cellSize = 40;
 
     private String[][] map = new String[rows][cols];
     private Bomb[][] bombs = new Bomb[rows][cols];
@@ -62,7 +59,6 @@ public class GameController {
     private int indexJ2 = 1;
 
     // Personnalisation thème de la map
-    private final String[] THEMES = {"Base", "Jungle", "Désert", "Backrooms"};
     private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "asset_backrooms"};
     private int themeIndex = 0;
 

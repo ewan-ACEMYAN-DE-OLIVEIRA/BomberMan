@@ -13,7 +13,6 @@ public class PersonnalisationController {
     private static final String[] THEMES = {"Base", "Jungle", "Désert", "Backrooms"};
     private static final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "asset_backrooms"};
     private static final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
-    private static final String[] COLOR_KEYS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
 
     private int indexJ1 = 0;
     private int indexJ2 = 1;
@@ -89,12 +88,12 @@ public class PersonnalisationController {
 
     private void updateJ1() {
         couleurJ1Label.setText(COLORS[indexJ1]);
-        imageJ1.setImage(getPlayerFaceImage(COLOR_KEYS[indexJ1]));
+        imageJ1.setImage(getPlayerFaceImage(COLORS[indexJ1]));
     }
 
     private void updateJ2() {
         couleurJ2Label.setText(COLORS[indexJ2]);
-        imageJ2.setImage(getPlayerFaceImage(COLOR_KEYS[indexJ2]));
+        imageJ2.setImage(getPlayerFaceImage(COLORS[indexJ2]));
     }
 
     private void updateTheme() {
