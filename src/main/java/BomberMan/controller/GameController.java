@@ -393,40 +393,6 @@ public class GameController {
         return new Image(url.toString());
     }
 
-    /**
-     * (Obsolète si tu utilises MusicManager)
-     * Joue la musique d'index donné dans la liste locale.
-     * @param index Index de la musique
-     */
-    private void playMusic(int index) {
-        try {
-            if (mediaPlayer != null) mediaPlayer.stop();
-            String musicFile = musicFiles.get(index);
-            java.net.URL url = getClass().getResource(musicFile);
-            if (url == null) {
-                System.err.println("Musique introuvable : " + musicFile);
-                return;
-            }
-            Media media = new Media(url.toExternalForm());
-            mediaPlayer = new MediaPlayer(media);
-            mediaPlayer.setOnEndOfMedia(this::playNextMusic);
-            mediaPlayer.play();
-            isMusicPaused = false; // ← On remet l'état à "en lecture"
-            if (pauseIcon != null)
-                pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
-        } catch (Exception e) {
-            System.err.println("Erreur lors de la lecture de la musique : " + e.getMessage());
-        }
-    }
-
-    /**
-     * (Obsolète si tu utilises MusicManager)
-     * Passe à la musique suivante de la liste locale.
-     */
-    private void playNextMusic() {
-        currentMusicIndex = (currentMusicIndex + 1) % musicFiles.size();
-        playMusic(currentMusicIndex);
-    }
 
     /**
      * Déduit la direction entre deux cases.
