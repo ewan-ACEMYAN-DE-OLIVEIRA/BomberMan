@@ -14,7 +14,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.stage.Stage;
 import javafx.stage.Modality;
@@ -124,7 +123,7 @@ public class GameController {
             "/Musique/background12.mp3",
             "/Musique/background13.mp3",
             "/Musique/background14.mp3",
-            "/Musique/background16.mp3"
+            "/Musique/background15.mp3"
     );
     private int currentMusicIndex = 0;
     private MediaPlayer mediaPlayer;
