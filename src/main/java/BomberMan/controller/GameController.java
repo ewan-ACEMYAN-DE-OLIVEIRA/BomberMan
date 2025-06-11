@@ -58,12 +58,12 @@ public class GameController {
     private Image bonusImg;
     private ImageView[][] cellBonuses = new ImageView[rows][cols];
 
-    // Personnalisation couleurs des joueurs
+
     private final String[] COLORS = {"Blanc", "Rouge", "Bleu", "Noir", "Jacob"};
     private int indexJ1 = 0;
     private int indexJ2 = 1;
 
-    // Personnalisation thème de la map
+
     private final String[] THEME_FOLDERS = {"asset_base", "asset_jungle", "asset_desert", "asset_backrooms"};
     private int themeIndex = 0;
 
@@ -74,11 +74,11 @@ public class GameController {
     private ImageView[][] cellPlayer1     = new ImageView[rows][cols];
     private ImageView[][] cellPlayer2     = new ImageView[rows][cols];
 
-    //son bonus/malus
+
     private AudioClip bonusSound;
     private AudioClip bonusMalusSound;
-    
-    //ia
+
+
     private String iaDifficulty = null;
     private boolean isIaFacile = false;
     private boolean isIaNormal = false;
@@ -107,7 +107,7 @@ public class GameController {
 
     private boolean gameEnded = false;
 
-    private Scene gameScene; // pour revenir à la scène de jeu d'origine
+    private Scene gameScene;
 
     private List<String> musicFiles = Arrays.asList(
             "/Musique/background1.mp3",
@@ -233,8 +233,7 @@ public class GameController {
         if (btnPerso != null) {
             btnPerso.setOnAction(e -> openPersonnalisationPage());
         }
-        
-        // Initialisation des icônes des boutons
+
         if (pauseIcon != null) {
             pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
         }
@@ -244,8 +243,7 @@ public class GameController {
         if (restartIcon != null) {
             restartIcon.setImage(new Image(getClass().getResource("/images/revenir.png").toExternalForm()));
         }
-        
-        // --- NOUVEAU : branche MusicManager sur les boutons ---
+
         if (btnPauseMusic != null) {
             btnPauseMusic.setOnAction(e -> {
                 if (MusicManager.isPaused()) {
@@ -269,8 +267,7 @@ public class GameController {
                 if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
             });
         }
-        
-        // --- Lance la musique du jeu (et coupe le menu si besoin) ---
+
         MusicManager.playGameMusic();
         
         gameCenterPane.widthProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
@@ -474,7 +471,6 @@ public class GameController {
         List<Direction> directions = Arrays.asList(Direction.DOS, Direction.FACE, Direction.GAUCHE, Direction.DROITE);
         Collections.shuffle(directions, aiRandom);
 
-        // Essaye chaque direction aléatoirement, s'arrête dès que ça bouge
         for (Direction dir : directions) {
             int newRow = p2Row, newCol = p2Col;
             switch (dir) {
@@ -488,7 +484,6 @@ public class GameController {
                 p2Col = newCol;
                 p2Dir = dir;
                 updatePlayersDisplay();
-                // Ramasse bonus/malus si présent
                 if (map[p2Row][p2Col].equals("bonus_range")) {
                     p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
                     if (bonusSound != null) bonusSound.play();
@@ -503,7 +498,6 @@ public class GameController {
                 break;
             }
         }
-        // Petite chance de poser une bombe
         if (aiRandom.nextDouble() < 0.25) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
         }
@@ -519,9 +513,7 @@ public class GameController {
             for (int c = 0; c < cols; c++) {
                 Bomb bomb = bombs[r][c];
                 if (bomb != null) {
-                    // Ajoute la case de la bombe
                     dangerCells.add(r + "," + c);
-                    // Ajoute les cases touchées par l'explosion
                     for (int[] dir : new int[][]{{-1,0},{1,0},{0,-1},{0,1}}) {
                         for (int dist = 1; dist <= bomb.radius; dist++) {
                             int nr = r + dir[0]*dist, nc = c + dir[1]*dist;
@@ -547,12 +539,10 @@ public class GameController {
         boolean inDanger = dangerCells.contains(p2Row + "," + p2Col);
 
         if (inDanger) {
-            // Cherche toutes les directions où fuir
             List<Direction> directions = Arrays.asList(Direction.FACE, Direction.DOS, Direction.GAUCHE, Direction.DROITE);
             Collections.shuffle(directions, aiRandom);
 
             boolean movedToSafe = false;
-            // 1. Essayer d'aller sur une case walkable ET non dangereuse
             for (Direction dir : directions) {
                 int newRow = p2Row, newCol = p2Col;
                 switch (dir) {
@@ -570,7 +560,6 @@ public class GameController {
                     break;
                 }
             }
-            // 2. Si aucune case safe dispo, bouger vers n'importe quelle case walkable (même si dangereuse)
             if (!movedToSafe) {
                 for (Direction dir : directions) {
                     int newRow = p2Row, newCol = p2Col;
@@ -590,7 +579,6 @@ public class GameController {
                 }
             }
         } else {
-            // S'il n'est pas en danger, déplacement aléatoire
             List<Direction> directions = Arrays.asList(Direction.FACE, Direction.DOS, Direction.GAUCHE, Direction.DROITE);
             Collections.shuffle(directions, aiRandom);
 
@@ -612,7 +600,6 @@ public class GameController {
             }
         }
 
-        // Ramasse bonus/malus si présent
         if (map[p2Row][p2Col].equals("bonus_range")) {
             p2ExplosionRadius = Math.min(p2ExplosionRadius + 1, 10);
             if (bonusSound != null) bonusSound.play();
@@ -625,16 +612,14 @@ public class GameController {
             updateBonusesDisplay();
         }
 
-        // Petite chance de poser une bombe, mais NE POSE PAS si tu es déjà sur une bombe !
         if (aiRandom.nextDouble() < 0.25 && bombs[p2Row][p2Col] == null) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
         }
         if (iaBombCooldown > 0) iaBombCooldown--;
 
-// ... et pour poser une bombe :
         if (iaBombCooldown == 0 && aiRandom.nextDouble() < 0.25 && bombs[p2Row][p2Col] == null && !getDangerCells().contains(p2Row + "," + p2Col)) {
             placeBomb(p2Row, p2Col, 2, p2ExplosionRadius);
-            iaBombCooldown = 10; // par exemple, 8 cycles de Timeline (si Timeline à 0.1s, ça fait 0.8s)
+            iaBombCooldown = 10;
         }
     }
 
@@ -1288,7 +1273,7 @@ public class GameController {
     @FXML
     private void onBackMenu() {
         if (timerTimeline != null) timerTimeline.stop();
-        MusicManager.playMenuMusic(); // (optionnel, si tu veux relancer la musique du menu)
+        MusicManager.playMenuMusic();
         BomberManApp.showMenu();
     }
     

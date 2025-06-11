@@ -10,7 +10,6 @@
            fx:controller="BomberMan.controller.MenuController"
            styleClass="root"
            stylesheets="@/css/menu.css">
-    <!-- Menu au-dessus de l'image de fond -->
     <VBox alignment="CENTER" spacing="18" styleClass="menu-background">
         <ImageView fx:id="logoImage" fitWidth="300" preserveRatio="true">
             <image>
@@ -20,7 +19,6 @@
         <Button text="Jouer 1v1" onAction="#onPlay1v1"/>
         <Button text="Jouer contre l'IA" onAction="#onPlayIA"/>
         <Button text="Mode Capture the Flag" onAction="#onPlayCTF"/>
-        <Button text="Personnalisation" onAction="#onCustom"/>
         <Button text="Quitter" onAction="#onQuit"/>
     </VBox>
 </StackPane>

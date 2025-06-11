@@ -62,7 +62,8 @@ public class DifficultyDialogController {
                 if (dialogStage != null) dialogStage.close();
             }
         });
-        confirmBtn.setDisable(true); // Désactive le bouton "confirmer" tant qu'aucune difficulté n'est choisie
+        confirmBtn.setDisable(true);
+
     }
 
     /**

@@ -1,0 +1,5 @@
+module:tp.intro.javafx
+BomberMan
+BomberMan.application
+BomberMan.controller
+BomberMan.model

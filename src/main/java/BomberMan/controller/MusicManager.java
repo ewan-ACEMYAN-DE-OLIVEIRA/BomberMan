@@ -134,7 +134,7 @@ public class MusicManager {
      * @param loop true pour boucler la musique, false sinon
      */
     private static void playMusic(String resourcePath, boolean loop) {
-        stopMusic(); // Coupe la musique précédente
+        stopMusic();
         URL url = MusicManager.class.getResource(resourcePath);
         if (url == null) {
             System.err.println("Musique introuvable : " + resourcePath);

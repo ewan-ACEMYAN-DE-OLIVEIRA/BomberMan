@@ -42,7 +42,6 @@
                 </graphic>
             </Button>
             <Region HBox.hgrow="ALWAYS" />
-            <!-- Correction : relié à la méthode onBtnPersoClick du contrôleur -->
             <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" onAction="#onBtnPersoClick" style="-fx-font-size:18px"/>
         </HBox>
     </bottom>

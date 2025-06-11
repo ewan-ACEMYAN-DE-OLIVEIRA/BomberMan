@@ -8,23 +8,14 @@
 
     <top>
         <HBox fx:id="topBar" prefHeight="60" spacing="20" alignment="CENTER" style="-fx-background-color: #222; -fx-border-color: #555; -fx-border-width: 0 0 2 0;">
-            <!-- Image Joueur 1 -->
             <ImageView fx:id="p1Icon" fitHeight="44" fitWidth="44" pickOnBounds="true"/>
-            <!-- Score joueur 1 -->
             <Label fx:id="scoreP1Label" text="0" style="-fx-text-fill: #fff; -fx-font-size: 20px;"/>
             <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Timer centré -->
             <Label fx:id="timerLabel" text="00:00" style="-fx-text-fill: #ffd700; -fx-font-size: 26px; -fx-font-weight: bold;"/>
             <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Score joueur 2 -->
             <Label fx:id="scoreP2Label" text="0" style="-fx-text-fill: #fff; -fx-font-size: 20px;"/>
-            <!-- Image Joueur 2 -->
             <ImageView fx:id="p2Icon" fitHeight="44" fitWidth="44" pickOnBounds="true"/>
             <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- Bouton menu à droite -->
             <Button fx:id="backMenuButton" text="Menu" style="-fx-background-color: #b00; -fx-text-fill: #fff; -fx-font-size: 16px;"/>
         </HBox>
     </top>
@@ -52,7 +43,6 @@
                     <ImageView fx:id="nextIcon" fitWidth="36" fitHeight="36" />
                 </graphic>
             </Button>
-            <!-- ESPACEUR pour pousser le bouton à droite -->
             <Region fx:id="spacer" HBox.hgrow="ALWAYS" />
             <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" style="-fx-font-size:18px" onAction="#onBtnPersoClick"/>
         </HBox>

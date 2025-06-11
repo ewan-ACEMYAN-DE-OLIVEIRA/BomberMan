@@ -27,11 +27,11 @@ public class MenuController {
     @FXML
     private void onPlayIA() {
         try {
-            // Charge la fenêtre de sélection de difficulté
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/FXML/DifficultyDialog.fxml"));
             Parent root = loader.load();
 
-            // Crée la scène et la fenêtre modale
+
             Stage dialogStage = new Stage();
             dialogStage.initOwner(BomberManApp.getPrimaryStage());
             dialogStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
@@ -40,7 +40,7 @@ public class MenuController {
             dialogStage.setScene(scene);
             dialogStage.setTitle("Choix de la difficulté");
 
-            // Passe le callback pour lancer le jeu une fois la difficulté choisie
+
             BomberMan.controller.DifficultyDialogController controller = loader.getController();
             controller.setContext(dialogStage, difficulty -> {
                 BomberManApp.showGame(false, difficulty);
