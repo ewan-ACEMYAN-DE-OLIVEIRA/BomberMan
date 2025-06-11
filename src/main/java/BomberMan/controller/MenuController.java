@@ -38,4 +38,8 @@ public class MenuController {
     private void onQuit() {
         System.exit(0);
     }
+    
+    @FXML
+    public void initialize() {MusicManager.playMenuMusic();
+    }
 }
