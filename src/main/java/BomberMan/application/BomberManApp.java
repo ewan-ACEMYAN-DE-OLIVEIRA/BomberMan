@@ -2,10 +2,13 @@ package BomberMan.application;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import BomberMan.controller.GameController;
 import BomberMan.controller.PlaceholderController;
+
+import java.io.IOException;
 
 public class BomberManApp extends Application {
     private static Stage primaryStage;
@@ -60,6 +63,17 @@ public class BomberManApp extends Application {
             PlaceholderController controller = loader.getController();
             controller.setMessage(message);
             primaryStage.setScene(scene);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void showCTF() {
+        try {
+            FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/FXML/CaptureTheFlag.fxml"));
+            Scene scene = new Scene(loader.load());
+            Stage stage = (Stage) getPrimaryStage(); // ou le moyen que tu utilises pour avoir la fenêtre principale
+            stage.setScene(scene);
+            stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }

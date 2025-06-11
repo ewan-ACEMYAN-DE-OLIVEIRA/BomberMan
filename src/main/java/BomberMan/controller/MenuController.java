@@ -42,4 +42,9 @@ public class MenuController {
     @FXML
     public void initialize() {MusicManager.playMenuMusic();
     }
+    
+    @FXML
+    private void onPlayCTF() {
+        BomberManApp.showCTF(); // ou la méthode qui lance le mode Capture The Flag
+    }
 }

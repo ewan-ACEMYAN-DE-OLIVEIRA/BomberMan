@@ -15,6 +15,7 @@
         <Text text="SUPER&#10;BOMBERMAN" styleClass="menu-title"/>
         <Button text="Jouer 1v1" onAction="#onPlay1v1"/>
         <Button text="Jouer contre l'IA" onAction="#onPlayIA"/>
+        <Button text="Mode Capture the Flag" onAction="#onPlayCTF"/>
         <Button text="Personnalisation" onAction="#onCustom"/>
         <Button text="Quitter" onAction="#onQuit"/>
     </VBox>
