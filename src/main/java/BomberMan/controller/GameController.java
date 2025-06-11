@@ -106,18 +106,6 @@ public class GameController {
     private boolean gameEnded = false;
 
     private Scene gameScene; // pour revenir à la scène de jeu d'origine
-    @FXML
-    private Button btnRestartMusic;
-    @FXML
-    private ImageView restartIcon;
-    @FXML
-    private Button btnPauseMusic;
-    @FXML
-    private Button btnNextMusic;
-    @FXML
-    private ImageView pauseIcon;
-    @FXML
-    private ImageView nextIcon;
 
     private List<String> musicFiles = Arrays.asList(
             "/Musique/background1.mp3",
@@ -390,12 +378,12 @@ public class GameController {
     }
     private Direction getDirection(int fromR, int fromC, int toR, int toC) {
         if (fromR == toR) {
-            if (toC == fromC + 1) return Direction.RIGHT;
-            if (toC == fromC - 1) return Direction.LEFT;
+            if (toC == fromC + 1) return Direction.DROITE;
+            if (toC == fromC - 1) return Direction.GAUCHE;
         }
         if (fromC == toC) {
-            if (toR == fromR + 1) return Direction.DOWN;
-            if (toR == fromR - 1) return Direction.UP;
+            if (toR == fromR + 1) return Direction.DOS;
+            if (toR == fromR - 1) return Direction.FACE;
         }
         return null;
     }
@@ -518,7 +506,7 @@ public class GameController {
 
         if (inDanger) {
             // Cherche toutes les directions où fuir
-            List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+            List<Direction> directions = Arrays.asList(Direction.FACE, Direction.DOS, Direction.GAUCHE, Direction.DROITE);
             Collections.shuffle(directions, aiRandom);
 
             boolean movedToSafe = false;
@@ -561,7 +549,7 @@ public class GameController {
             }
         } else {
             // S'il n'est pas en danger, déplacement aléatoire
-            List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+            List<Direction> directions = Arrays.asList(Direction.FACE, Direction.DOS, Direction.GAUCHE, Direction.DROITE);
             Collections.shuffle(directions, aiRandom);
 
             for (Direction dir : directions) {
@@ -799,15 +787,15 @@ public class GameController {
         }
 
         // --- 7. SINON, DEPLACEMENT RANDOM ---
-        List<Direction> directions = Arrays.asList(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT);
+        List<Direction> directions = Arrays.asList(Direction.FACE, Direction.DOS, Direction.GAUCHE, Direction.DROITE);
         Collections.shuffle(directions, aiRandom);
         for (Direction dir : directions) {
             int newRow = p2Row, newCol = p2Col;
             switch (dir) {
-                case UP:    newRow--; break;
-                case DOWN:  newRow++; break;
-                case LEFT:  newCol--; break;
-                case RIGHT: newCol++; break;
+                case FACE:    newRow--; break;
+                case DOS:  newRow++; break;
+                case GAUCHE:  newCol--; break;
+                case DROITE: newCol++; break;
             }
             if (isWalkable(newRow, newCol, 2) && !dangerCells.contains(newRow + "," + newCol)) {
                 p2Row = newRow;
