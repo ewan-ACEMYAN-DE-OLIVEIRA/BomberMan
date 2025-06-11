@@ -149,15 +149,15 @@ public class GameController {
             this.row = row; this.col = col; this.owner = owner; this.radius = radius;
         }
     }
-
+    
     @FXML
     public void initialize() {
         loadThemeAssets();
         setupGridPaneResize();
-
+        
         if (p1Icon != null) p1Icon.setImage(getPlayerImage(COLORS[indexJ1], Direction.DOWN));
         if (p2Icon != null) p2Icon.setImage(getPlayerImage(COLORS[indexJ2], Direction.DOWN));
-
+        
         gridPane.getChildren().clear();
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
@@ -165,111 +165,112 @@ public class GameController {
                 cell.setMinSize(0, 0);
                 cell.setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
                 cell.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-
+                
                 ImageView bg    = new ImageView();
                 ImageView expl  = new ImageView();
                 ImageView bomb  = new ImageView();
                 ImageView p1    = new ImageView();
                 ImageView p2    = new ImageView();
                 ImageView bonus = new ImageView();
-
-                // Bind la taille de chaque image à la taille de la cellule
+                
                 for (ImageView img : new ImageView[]{bg, expl, bomb, p1, p2, bonus}) {
                     img.fitWidthProperty().bind(cell.widthProperty());
                     img.fitHeightProperty().bind(cell.heightProperty());
                     img.setPreserveRatio(true);
                 }
-
+                
                 expl.setVisible(false);
                 bomb.setVisible(false);
                 p1.setVisible(false);
                 p2.setVisible(false);
                 bonus.setVisible(false);
-
+                
                 cellBackgrounds[r][c] = bg;
                 cellExplosions[r][c]  = expl;
                 cellBombs[r][c]       = bomb;
                 cellPlayer1[r][c]     = p1;
                 cellPlayer2[r][c]     = p2;
                 cellBonuses[r][c]     = bonus;
-
+                
                 cell.getChildren().addAll(bg, bonus, expl, bomb, p1, p2);
-
+                
                 gridPane.add(cell, c, r);
             }
         }
-
+        
         generateRandomMap();
         updateBombs();
         updateExplosions();
         updatePlayersDisplay();
-
+        
         if (timerLabel != null) timerLabel.setText("00:00");
         if (scoreP1Label != null) scoreP1Label.setText("0");
         if (scoreP2Label != null) scoreP2Label.setText("0");
-
+        
         timerTimeline = new Timeline(new KeyFrame(Duration.seconds(1), e -> updateTimer()));
         timerTimeline.setCycleCount(Timeline.INDEFINITE);
-
+        
         URL bonusSoundUrl = getClass().getResource("/Son/Bonus.mp3");
         if (bonusSoundUrl != null) {
             bonusSound = new AudioClip(bonusSoundUrl.toExternalForm());
         }
-
+        
         gridPane.setFocusTraversable(true);
         gridPane.requestFocus();
         gridPane.setOnKeyPressed(this::handleKeyPressed);
         gridPane.setOnMouseClicked(e -> gridPane.requestFocus());
-
+        
         if (backMenuButton != null)
             backMenuButton.setOnAction(e -> onBackMenu());
-
+        
         if (gridPane != null && gridPane.getScene() != null) {
             gameScene = gridPane.getScene();
         }
-
+        
         if (btnPerso != null) {
             btnPerso.setOnAction(e -> openPersonnalisationPage());
         }
+        
+        // Initialisation des icônes des boutons
         if (pauseIcon != null) {
             pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
         }
         if (nextIcon != null) {
             nextIcon.setImage(new Image(getClass().getResource("/images/pass.png").toExternalForm()));
         }
-        if (btnNextMusic != null) {
-            btnNextMusic.setOnAction(e -> playNextMusic());
-        }
-        if (btnPauseMusic != null) {
-            btnPauseMusic.setOnAction(e -> {
-                if (mediaPlayer == null) return;
-                if (isMusicPaused) {
-                    mediaPlayer.play();
-                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
-                    isMusicPaused = false;
-                } else {
-                    mediaPlayer.pause();
-                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/play.png").toExternalForm()));
-                    isMusicPaused = true;
-                }
-            });
-        }
         if (restartIcon != null) {
             restartIcon.setImage(new Image(getClass().getResource("/images/revenir.png").toExternalForm()));
         }
-        if (btnRestartMusic != null) {
-            btnRestartMusic.setOnAction(e -> {
-                if (mediaPlayer != null) {
-                    mediaPlayer.seek(javafx.util.Duration.ZERO);
-                    if (isMusicPaused) {
-                        mediaPlayer.play();
-                        isMusicPaused = false;
-                        pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
-                    }
+        
+        // Gestion des boutons de contrôle musique avec MusicManager
+        if (btnPauseMusic != null) {
+            btnPauseMusic.setOnAction(e -> {
+                if (MusicManager.isPaused()) {
+                    MusicManager.resume();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+                } else {
+                    MusicManager.pause();
+                    if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/play.png").toExternalForm()));
                 }
             });
         }
-        playMusic(currentMusicIndex);
+        if (btnNextMusic != null) {
+            btnNextMusic.setOnAction(e -> {
+                MusicManager.playNextGameMusic(); // à implémenter dans MusicManager pour changer de musique de fond du jeu
+                if (pauseIcon != null) pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+            });
+        }
+        if (btnRestartMusic != null) {
+            btnRestartMusic.setOnAction(e -> {
+                MusicManager.restart();
+                if (!MusicManager.isPaused() && pauseIcon != null)
+                    pauseIcon.setImage(new Image(getClass().getResource("/images/pause.png").toExternalForm()));
+            });
+        }
+        
+        // Lance la musique du jeu à l'arrivée sur l'écran jeu
+        MusicManager.playGameMusic();
+        
         gameCenterPane.widthProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         gameCenterPane.heightProperty().addListener((obs, oldVal, newVal) -> resizeGridPane());
         resizeGridPane();
