@@ -83,25 +83,6 @@ public class BomberManApp extends Application {
             e.printStackTrace();
         }
     }
-
-    /**
-     * Affiche une page temporaire (placeholder) personnalisée avec un message.
-     * Utile pour afficher un écran "En construction" ou un message d'erreur.
-     * @param message Message à afficher sur l'écran placeholder.
-     */
-    public static void showPlaceholder(String message) {
-        try {
-            FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/FXML/placeholder.fxml"));
-            Scene scene = new Scene(loader.load());
-            scene.getStylesheets().add(BomberManApp.class.getResource("/css/bomberman.css").toExternalForm());
-            PlaceholderController controller = loader.getController();
-            controller.setMessage(message);
-            primaryStage.setScene(scene);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * Affiche la scène du mode Capture The Flag (CTF).
      * Charge le FXML dédié au mode CTF et l'affiche dans la fenêtre principale.
@@ -110,6 +91,7 @@ public class BomberManApp extends Application {
         try {
             FXMLLoader loader = new FXMLLoader(BomberManApp.class.getResource("/FXML/CaptureTheFlag.fxml"));
             Scene scene = new Scene(loader.load());
+            scene.getStylesheets().add(BomberManApp.class.getResource("/css/bomberman.css").toExternalForm());
             Stage stage = (Stage) getPrimaryStage(); // récupère le stage principal
             stage.setScene(scene);
             stage.show();

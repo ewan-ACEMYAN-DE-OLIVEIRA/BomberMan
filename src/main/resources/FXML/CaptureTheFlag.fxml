@@ -43,8 +43,8 @@
                     <ImageView fx:id="nextIcon" fitWidth="36" fitHeight="36" />
                 </graphic>
             </Button>
-            <Region fx:id="spacer" HBox.hgrow="ALWAYS" />
-            <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" style="-fx-font-size:18px" onAction="#onBtnPersoClick"/>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnPerso" text="Personnalisation" minWidth="160" onAction="#onBtnPersoClick" style="-fx-font-size:18px"/>
         </HBox>
     </bottom>
 </BorderPane>

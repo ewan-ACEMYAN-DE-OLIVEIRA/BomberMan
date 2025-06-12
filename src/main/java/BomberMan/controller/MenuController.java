@@ -53,14 +53,6 @@ public class MenuController {
     }
 
     /**
-     * Affiche un écran placeholder pour la personnalisation (fonctionnalité à venir).
-     */
-    @FXML
-    private void onCustom() {
-        BomberManApp.showPlaceholder("Personnalisation à venir...");
-    }
-
-    /**
      * Quitte l'application proprement.
      */
     @FXML

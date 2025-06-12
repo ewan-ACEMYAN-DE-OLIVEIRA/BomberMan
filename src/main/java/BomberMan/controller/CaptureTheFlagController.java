@@ -79,7 +79,10 @@ public class CaptureTheFlagController {
     private Bomb[][] bombs = new Bomb[rows][cols];
     private boolean[][] isExplosion = new boolean[rows][cols];
     private Scene gameScene;
-    
+
+    private Direction p1Direction = Direction.FACE;
+    private Direction p2Direction = Direction.FACE;
+
     private static class Bomb {
         int row, col, owner, radius;
         public Bomb(int row, int col, int owner, int radius) {
@@ -290,9 +293,9 @@ public class CaptureTheFlagController {
             cellPlayer1[r][c].setVisible(false);
             cellPlayer2[r][c].setVisible(false);
         }
-        cellPlayer1[p1Pos.x][p1Pos.y].setImage(getPlayerImage(COLORS[indexJ1], Direction.FACE));
+        cellPlayer1[p1Pos.x][p1Pos.y].setImage(getPlayerImage(COLORS[indexJ1], p1Direction));
         cellPlayer1[p1Pos.x][p1Pos.y].setVisible(true);
-        cellPlayer2[p2Pos.x][p2Pos.y].setImage(getPlayerImage(COLORS[indexJ2], Direction.FACE));
+        cellPlayer2[p2Pos.x][p2Pos.y].setImage(getPlayerImage(COLORS[indexJ2], p2Direction));
         cellPlayer2[p2Pos.x][p2Pos.y].setVisible(true);
     }
 
@@ -514,18 +517,19 @@ public class CaptureTheFlagController {
         if (gameEnded) return;
         KeyCode code = event.getCode();
 
-
         int nr1 = p1Pos.x, nc1 = p1Pos.y;
         boolean moved1 = false, bomb1 = false;
+        Direction newP1Dir = p1Direction;
         switch (code) {
-            case Z: nr1--; moved1 = true; break;
-            case S: nr1++; moved1 = true; break;
-            case Q: nc1--; moved1 = true; break;
-            case D: nc1++; moved1 = true; break;
+            case Z: nr1--; moved1 = true; newP1Dir = Direction.DOS; break;
+            case S: nr1++; moved1 = true; newP1Dir = Direction.FACE; break;
+            case Q: nc1--; moved1 = true; newP1Dir = Direction.GAUCHE; break;
+            case D: nc1++; moved1 = true; newP1Dir = Direction.DROITE; break;
             case E: bomb1 = true; break;
         }
         if (moved1 && isWalkable(nr1, nc1)) {
             p1Pos.setLocation(nr1, nc1);
+            p1Direction = newP1Dir; // Met à jour la direction
             if (!p1HasFlag && p1Pos.equals(flag2Pos)) {
                 p1HasFlag = true;
                 flag2Pos.setLocation(-1, -1);
@@ -543,18 +547,19 @@ public class CaptureTheFlagController {
             placeBomb(p1Pos.x, p1Pos.y, 1, bombRadius);
         }
 
-
         int nr2 = p2Pos.x, nc2 = p2Pos.y;
         boolean moved2 = false, bomb2 = false;
+        Direction newP2Dir = p2Direction;
         switch (code) {
-            case I: nr2--; moved2 = true; break;
-            case K: nr2++; moved2 = true; break;
-            case J: nc2--; moved2 = true; break;
-            case L: nc2++; moved2 = true; break;
+            case I: nr2--; moved2 = true; newP2Dir = Direction.DOS; break;
+            case K: nr2++; moved2 = true; newP2Dir = Direction.FACE; break;
+            case J: nc2--; moved2 = true; newP2Dir = Direction.GAUCHE; break;
+            case L: nc2++; moved2 = true; newP2Dir = Direction.DROITE; break;
             case U: bomb2 = true; break;
         }
         if (moved2 && isWalkable(nr2, nc2)) {
             p2Pos.setLocation(nr2, nc2);
+            p2Direction = newP2Dir; // Met à jour la direction
             if (!p2HasFlag && p2Pos.equals(flag1Pos)) {
                 p2HasFlag = true;
                 flag1Pos.setLocation(-1, -1);
@@ -580,11 +585,21 @@ public class CaptureTheFlagController {
      * @return Image du joueur
      */
     private Image getPlayerImage(String colorKey, Direction dir) {
-        String path = "/Personnages/" + colorKey + "/Face.png";
+        String suffix;
+        switch (dir) {
+            case DOS:    suffix = "Dos"; break;
+            case GAUCHE:  suffix = "Gauche"; break;
+            case DROITE: suffix = "Droite"; break;
+            default:    suffix = "Face"; break;
+        }
+        String path = "/Personnages/" + colorKey + "/" + suffix + ".png";
         java.net.URL url = getClass().getResource(path);
-        if (url == null) url = getClass().getResource("/Personnages/Blanc/Face.png");
         if (url == null) {
-            System.err.println("Image joueur absente : " + path);
+            System.err.println("Image non trouvée : " + path);
+            url = getClass().getResource("/Personnages/Blanc/face.png");
+        }
+        if (url == null) {
+            System.err.println("Fallback impossible : image joueur manquante.");
             return new Image("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAn8B9W5x3QAAAABJRU5ErkJggg==");
         }
         return new Image(url.toString());
